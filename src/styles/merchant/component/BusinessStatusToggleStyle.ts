@@ -3,20 +3,17 @@ import palette from '@lib/colorPalette';
 
 export const Wrap = styled.div<{ $disabled?: boolean }>`
   display: flex;
-  width: 320px;
   height: 40px;
   padding: 3px;
   justify-content: center;
   align-items: center;
   gap: 2px;
 
-  outline: none;
-
   border-radius: 12px;
-  border: 1px solid rgba(98, 161, 147, 0.2);
-  background-color: ${palette.card};
+  border: 1px solid rgba(47, 125, 105, 0.2);
 
   box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
+  outline: none;
 `;
 
 export const Knob = styled.div<{ $pos: 'left' | 'right' }>`

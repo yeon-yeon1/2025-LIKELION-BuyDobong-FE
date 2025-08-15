@@ -73,7 +73,9 @@ export const GlobalStyle = createGlobalStyle`
     }
     #root {
       background-color: ${palette.brandBackground};
-      min-height: 800px;
+      height: 800px;
+      overflow-y: auto;
+
     }
   }
 `;

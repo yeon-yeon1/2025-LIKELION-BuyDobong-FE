@@ -2,11 +2,11 @@
 const palette = {
   card: '#FFFFFF',
   brandBackground: '#EEF1EE',
-  brandPrimary: '#62A193',
+  brandPrimary: '#2F7D69',
   brandPrimary80: '#6F8C87',
   brandPrimary60: '#83928D',
   textPrimary: '#2C2C2C',
-  textSecondary: '#85898F',
+  textSecondary: '#6B6B6F',
   textDisabled: '#B5B7BB',
   textDisabled2: '#E0E1E3',
   textDisabled3: '#676A6B',

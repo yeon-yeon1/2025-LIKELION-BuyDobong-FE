@@ -4,7 +4,7 @@
  * 입력 방식(음성 / 텍스트)을 토글하는 UI 컴포넌트입니다.
  *
  * @example
- * import InputModeToggle, { type InputMode } from '@components/common/InputModeToggle';
+ * import InputModeToggle, { type InputMode } from '@components/merchant/InputModeToggle';
  *
  * const [mode, setMode] = useState<InputMode>('voice');
  *

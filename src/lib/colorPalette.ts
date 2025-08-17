@@ -1,17 +1,16 @@
-// src/styles/palette.ts
 const palette = {
   card: '#FFFFFF',
   brandBackground: '#EEF1EE',
   brandPrimary: '#2F7D69',
-  brandPrimary80: '#6F8C87',
-  brandPrimary60: '#83928D',
+  brandPrimary20: 'rgba(98, 161, 147, 0.2)',
+  brandPrimary30: 'rgba(98, 161, 147, 0.3)',
   textPrimary: '#2C2C2C',
   textSecondary: '#6B6B6F',
-  textDisabled: '#B5B7BB',
-  textDisabled2: '#E0E1E3',
-  textDisabled3: '#676A6B',
-  highlightPrimary: '#E8625A',
-  highlightSecondary: '#B59393',
+  textDisabled: '#b0b1b4',
+  textDisabled2: '#dddddd',
+  textPhotoBlur: 'rgba(0, 0, 0, 0.20)',
+  highlightRed: '#BE5658',
+  highlightRed20: 'rgba(190, 86, 88, 0.20)',
 } as const;
 
 export default palette;

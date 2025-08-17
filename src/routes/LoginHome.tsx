@@ -1,4 +1,3 @@
-import React from 'react';
 import * as L from '@styles/LoginHomeStyle';
 import Logo from '@assets/LoginHomeLogo.svg?react';
 

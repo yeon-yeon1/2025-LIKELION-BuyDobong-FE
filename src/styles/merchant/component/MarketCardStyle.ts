@@ -2,13 +2,15 @@ import styled from 'styled-components';
 import palette from '@lib/colorPalette';
 
 export const Card = styled.div`
-  display: grid;
-  grid-template-columns: 60px 1fr;
   gap: 16px;
   padding: 10px 15px;
   background: ${palette.card};
   border-radius: 14px;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06) inset;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
 export const Thumb = styled.div`
@@ -27,6 +29,11 @@ export const Thumb = styled.div`
     object-fit: cover;
     display: block;
   }
+`;
+
+export const Wrapper = styled.div`
+  display: flex;
+  gap: 16px;
 `;
 
 export const Info = styled.div`

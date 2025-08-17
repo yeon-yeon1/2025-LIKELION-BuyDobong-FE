@@ -6,7 +6,7 @@ import MarketCard from '@components/merchant/MarketCard';
 import CheckButton from '@components/merchant/CheckButton';
 import PlusIcon from '@assets/BlackPlus.svg?react';
 import DownArrow from '@assets/DownArrow.svg?react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function StoreRegister() {
   const navigate = useNavigate();
@@ -18,6 +18,7 @@ function StoreRegister() {
   }, [market]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewStatus, setPreviewStatus] = useState<'open' | 'closed'>('closed');
 
   const dobongMarkets: MarketOption[] = useMemo(
     () => [
@@ -30,6 +31,32 @@ function StoreRegister() {
     ],
     []
   );
+
+  const location = useLocation();
+  type NavState = {
+    name?: string;
+    market?: string; // id
+    imageUrl?: string | null;
+    latitude?: number;
+    longitude?: number;
+    status?: 'open' | 'closed';
+  } | null;
+
+  // Prefill when navigated with state from MerchantHome
+  useEffect(() => {
+    const state = (location.state as NavState) || null;
+    if (!state) return;
+
+    if (state.name) setStoreName(state.name);
+    if (state.market) {
+      const found = dobongMarkets.find(
+        (m) => m.id === state.market || m.id.toUpperCase() === state.market?.toUpperCase()
+      );
+      if (found) setMarket(found);
+    }
+    if (state.imageUrl !== undefined) setImageUrl(state.imageUrl ?? null);
+    if (state.status === 'open' || state.status === 'closed') setPreviewStatus(state.status);
+  }, [location.state, dobongMarkets]);
 
   function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number) {
     const toRad = (x: number) => (x * Math.PI) / 180;
@@ -265,8 +292,9 @@ function StoreRegister() {
               <MarketCard
                 name={storeName}
                 marketName={market!.name}
-                status="closed"
+                status={previewStatus}
                 imageUrl={imageUrl}
+                showArrow={false}
               />
               {/* 하단 체크 버튼 */}
               <S.Bottom>

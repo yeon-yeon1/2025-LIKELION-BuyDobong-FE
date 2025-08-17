@@ -26,6 +26,7 @@ import * as S from '@styles/merchant/component/MarketCardStyle';
 import DefaultImg from '@assets/MarketImg.svg?react';
 import GrayDot from '@assets/GrayDot.svg?react';
 import GreenDot from '@assets/GreenDot.svg?react';
+import RightArrow from '@assets/RightArrow.svg?react';
 
 export type MarketStatus = 'open' | 'closed';
 
@@ -39,6 +40,8 @@ export interface MarketCardProps {
   /** 대표 이미지 URL (없으면 기본 SVG 표시) */
   imageUrl?: string | null;
   className?: string;
+  /** 홈에서만 우측 화살표 표시 여부 */
+  showArrow?: boolean;
 }
 
 export default function MarketCard({
@@ -47,30 +50,36 @@ export default function MarketCard({
   status = 'closed',
   imageUrl,
   className,
+  showArrow,
 }: MarketCardProps) {
   const isOpen = status === 'open';
 
   return (
     <S.Card className={className} role="article" aria-label={`${name} 프리뷰`}>
-      <S.Thumb>{imageUrl ? <img src={imageUrl} alt={`${name} 이미지`} /> : <DefaultImg />}</S.Thumb>
+      <S.Wrapper>
+        <S.Thumb>
+          {imageUrl ? <img src={imageUrl} alt={`${name} 이미지`} /> : <DefaultImg />}
+        </S.Thumb>
 
-      <S.Info>
-        <S.Title>{name}</S.Title>
-        <S.BadgeWrap>
-          <S.Badge>{marketName}</S.Badge>
-          <S.Badge dim isOpen={isOpen}>
-            {isOpen ? (
-              <>
-                <GreenDot /> 영업중
-              </>
-            ) : (
-              <>
-                <GrayDot /> 영업종료
-              </>
-            )}
-          </S.Badge>
-        </S.BadgeWrap>
-      </S.Info>
+        <S.Info>
+          <S.Title>{name}</S.Title>
+          <S.BadgeWrap>
+            <S.Badge>{marketName}</S.Badge>
+            <S.Badge dim isOpen={isOpen}>
+              {isOpen ? (
+                <>
+                  <GreenDot /> 영업중
+                </>
+              ) : (
+                <>
+                  <GrayDot /> 영업종료
+                </>
+              )}
+            </S.Badge>
+          </S.BadgeWrap>
+        </S.Info>
+      </S.Wrapper>
+      {showArrow && <RightArrow />}
     </S.Card>
   );
 }

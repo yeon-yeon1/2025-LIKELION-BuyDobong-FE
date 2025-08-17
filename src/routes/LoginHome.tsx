@@ -1,10 +1,22 @@
 import React from 'react';
 import * as L from '@styles/LoginHomeStyle';
+import Logo from '@assets/LoginHomeLogo.svg?react';
 
 function LoginHome() {
   return (
     <>
-      <L.LoginHome>로그인 홈 페이지</L.LoginHome>
+      <L.LoginHome>
+        <L.Logo>
+          <Logo aria-label="앱 로고" />
+        </L.Logo>
+        <L.LogoNameBox>
+          <L.Ko>바이도봉</L.Ko>
+          <L.En>Buy-Dobong</L.En>
+          <L.Tagline>말하면 전해지는 전통시장 특가 정보</L.Tagline>
+        </L.LogoNameBox>
+        <L.StartButton>시작하기</L.StartButton>
+        <L.LoginButton>로그인</L.LoginButton>
+      </L.LoginHome>
     </>
   );
 }

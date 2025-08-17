@@ -1,7 +1,20 @@
 /**
  * EmptyStoreCard
- * - 상점 데이터가 없을 때 노출되는 빈 상태 카드
- * - “등록하기” 버튼 클릭 시 onRegister 호출, 미지정 시 기본 라우팅 수행
+ *
+ * - 상점 데이터가 없을 때 보여지는 빈 상태 카드입니다.
+ * - “등록하기” 버튼을 클릭하면 onRegister가 호출되며, 지정하지 않으면 기본적으로 /storeRegister 경로로 이동합니다.
+ *
+ * // import
+ * import EmptyStoreCard from '@components/merchant/EmptyStoreCard';
+ *
+ * // 1. onRegister 없이 사용 시 (자동으로 /storeRegister로 이동):
+ * <EmptyStoreCard />
+ *
+ * // 2. onRegister 콜백을 사용하여 등록을 직접 처리할 때:
+ * <EmptyStoreCard onRegister={() => {
+ *   // 여기에 사용자 등록 로직 작성
+ *   alert('등록 버튼이 클릭되었습니다!');
+ * }} />
  */
 
 import React from 'react';
@@ -11,7 +24,6 @@ import StoreIcon from '@assets/NoMarket.svg?react';
 import PlusButton from '@assets/BlackPlus.svg?react';
 
 export interface EmptyStoreCardProps {
-  /** 외부에서 등록 버튼 클릭 동작을 주입하고 싶을 때 */
   onRegister?: () => void;
   className?: string;
 }
@@ -21,7 +33,7 @@ export default function EmptyStoreCard({ onRegister, className }: EmptyStoreCard
 
   const handleRegister = () => {
     if (onRegister) return onRegister();
-    navigate('/productRegister');
+    navigate('/storeRegister');
   };
 
   return (

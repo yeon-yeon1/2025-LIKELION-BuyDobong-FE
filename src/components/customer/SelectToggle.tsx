@@ -8,7 +8,7 @@
  *
  * const [mode, setMode] = useState<Select>('store');
  *
- *   <InputModeToggle
+ *   <SelectToggle
  *     value={mode} // 현재 모드 ('store' | 'product')
  *     onChange={(next) => setMode(next)} // 모드 변경 핸들러
  *   />

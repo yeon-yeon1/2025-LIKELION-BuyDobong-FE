@@ -14,6 +14,7 @@ import StoreRegister from '@routes/merchant/StoreRegister';
 import LoginHome from '@routes/LoginHome';
 import Login from '@routes/Login';
 import Signup from '@routes/Signup';
+import SignupRole from '@routes/SignupRole';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/" element={<LoginHome />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/signupRole" element={<SignupRole />} />
         {/* 소비자 */}
         <Route path="/customerHome" element={<CustomerHome />} />
         <Route path="/keywordSearch" element={<KeywordSearch />} />

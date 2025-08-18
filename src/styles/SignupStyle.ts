@@ -124,7 +124,8 @@ export const BottomBar = styled.div`
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 180px;
+  /* 100px 고정 + 노치/홈인 레이아웃 여유 */
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
   display: grid;
   place-items: center;
   padding: 0 20px;

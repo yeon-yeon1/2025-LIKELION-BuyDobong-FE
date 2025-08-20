@@ -180,6 +180,11 @@ export default function ProductList({
     if (wasExpanded) onRowClick(id);
   };
 
+  const unhideIfHidden = (id: string) => {
+    if (!hiddenIds.has(id)) return;
+    toggleHidden(id, false, false);
+  };
+
   const hiddenOrderRaw = localStorage.getItem(HIDDEN_IDS_KEY + ':order');
   let hiddenOrder: string[] = [];
   try {
@@ -270,6 +275,8 @@ export default function ProductList({
                                 // 특가 종료 후 행 접기
                                 onRowClick(it.id);
                               } else {
+                                // 특가 설정 시, 숨김 상태라면 자동으로 숨김 해제
+                                unhideIfHidden(it.id);
                                 onSpecial(it.id, forwardMode);
                               }
                             }}

@@ -8,6 +8,8 @@ import ProductSearch from '@routes/customer/ProductSearch';
 // 상인
 import MerchantHome from '@routes/merchant/MerchantHome';
 import ProductRegister from '@routes/merchant/ProductRegister';
+import ProductCreate from '@routes/merchant/ProductCreate';
+import ProductEdit from '@routes/merchant/ProductEdit';
 import SpecialRegister from '@routes/merchant/SpecialRegister';
 import StoreRegister from '@routes/merchant/StoreRegister';
 // 로그인, 회원가입
@@ -32,6 +34,8 @@ function App() {
         {/* 상인 */}
         <Route path="/merchantHome" element={<MerchantHome />} />
         <Route path="/productRegister" element={<ProductRegister />} />
+        <Route path="/product/new" element={<ProductCreate />} />
+        <Route path="/product/edit" element={<ProductEdit />} />
         <Route path="/specialRegister" element={<SpecialRegister />} />
         <Route path="/storeRegister" element={<StoreRegister />} />
       </Routes>

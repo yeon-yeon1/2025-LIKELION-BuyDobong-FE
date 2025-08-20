@@ -6,11 +6,22 @@ import { useLocation, useNavigate } from 'react-router-dom';
 function Header() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (location.pathname === '/storeRegister' || location.pathname === '/productRegister') {
+      navigate('/merchantHome');
+    } else if (location.pathname === '/product/new') {
+      navigate('/productRegister');
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <>
       <H.Header>
         {location.pathname !== '/customerHome' && location.pathname !== '/merchantHome' && (
-          <BackButton onClick={() => navigate(-1)} />
+          <BackButton onClick={handleBack} />
         )}
       </H.Header>
     </>

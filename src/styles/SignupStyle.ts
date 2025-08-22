@@ -28,11 +28,11 @@ export const InputBox = styled.div`
 `;
 
 // 한 줄(인풋 + 부가요소) 컨테이너
-export const InputRow = styled.div<{ hasError?: boolean }>`
+export const InputRow = styled.div<{ $hasError?: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1.5px solid ${({ hasError }) => (hasError ? palette.highlightPrimary : 'transparent')};
+  border: 1.5px solid ${({ $hasError }) => ($hasError ? palette.brandPrimary : 'transparent')};
   border-radius: 18px;
   padding: 7px 14px;
   box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
@@ -93,7 +93,7 @@ export const Check = styled.span`
 export const ErrorMessage = styled.div`
   margin-top: 6px;
   font-size: 13px;
-  color: ${palette.highlightPrimary};
+  color: ${palette.highlightRed};
   display: flex;
   align-items: center;
   gap: 6px;

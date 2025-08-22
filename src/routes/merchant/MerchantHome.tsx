@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Header from '@components/Header';
 import EmptyStoreCard from '@components/merchant/EmptyStoreCard';
@@ -12,6 +13,11 @@ import BusinessStatusToggle, {
 import RightArrow from '@assets/RightArrow.svg?react';
 import Mic from '@assets/Mic.svg?react';
 import Text from '@assets/Text.svg?react';
+
+const DEBUG = import.meta.env.DEV;
+const dbg = (...args: any[]) => {
+  if (DEBUG) console.log('[MerchantHome]', ...args);
+};
 
 type StoredStore = {
   name: string;
@@ -27,6 +33,23 @@ type Product = {
   stock: number;
   updatedAt?: number;
 };
+
+const api = axios.create({
+  baseURL: 'https://n0t4u.shop',
+  headers: { 'Content-Type': 'application/json', Accept: '*/*' },
+});
+api.interceptors.request.use((config) => {
+  const t = sessionStorage.getItem('auth:token');
+  if (t) {
+    config.headers = config.headers ?? {};
+    (config.headers as any).Authorization = `Bearer ${t}`;
+    if (DEBUG) {
+      const short = t ? t.slice(0, 12) + '...' : '(none)';
+      dbg('attach token', short);
+    }
+  }
+  return config;
+});
 
 const marketDisplayName = (market: string) => {
   switch (market) {
@@ -47,8 +70,18 @@ const marketDisplayName = (market: string) => {
   }
 };
 
+// Local fallback components (do not mutate imported namespace)
+const Loading: React.FC<React.PropsWithChildren> =
+  // @ts-ignore
+  (M as any).Loading || ((props) => <div style={{ padding: 12, color: '#666' }} {...props} />);
+const ErrorText: React.FC<React.PropsWithChildren> =
+  // @ts-ignore
+  (M as any).ErrorText || ((props) => <div style={{ padding: 12, color: 'crimson' }} {...props} />);
+
 function MerchantHome() {
   const [stores, setStores] = useState<StoredStore[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchErr, setFetchErr] = useState('');
   const [status, setStatus] = useState<BusinessStatus>(() => {
     const saved = localStorage.getItem('merchantHome:status');
     return saved === 'open' || saved === 'closed' ? (saved as BusinessStatus) : 'open';
@@ -60,18 +93,49 @@ function MerchantHome() {
   });
 
   useEffect(() => {
-    const lastBody = localStorage.getItem('storeRegister:lastBody');
-    if (lastBody) {
+    let mounted = true;
+    const url = '/api/store/me';
+    dbg('fetch', url);
+    (async () => {
       try {
-        const parsed = JSON.parse(lastBody);
-        if (parsed && typeof parsed === 'object' && parsed.name && parsed.market) {
-          setStores([{ name: parsed.name, market: parsed.market, imageUrl: parsed.imageUrl }]);
+        setLoading(true);
+        setFetchErr('');
+        const res = await api.get(url, { validateStatus: () => true });
+        console.log('Response status:', res.status, 'data:', res.data);
+        if (!mounted) return;
+        if (res.status === 200 && res.data) {
+          setStores([res.data]);
+          if (typeof res.data.open === 'boolean') {
+            setStatus(res.data.open ? 'open' : 'closed');
+          }
+        } else if (res.status === 204 || res.status === 404) {
+          setStores([]);
+        } else if (res.status === 401) {
+          dbg('unauthorized (401) -> redirect /login');
+          navigate('/login', { replace: true });
+        } else {
+          dbg('error response', res.status, res.data);
+          setStores([]);
+          setFetchErr(
+            typeof res.data === 'string'
+              ? res.data
+              : res.data?.message || '상점 정보를 불러오지 못했습니다.'
+          );
         }
       } catch (e) {
-        // Ignore parse errors
+        dbg('network error', e);
+        if (mounted) {
+          setStores([]);
+          setFetchErr('네트워크 오류로 상점 정보를 불러오지 못했습니다.');
+        }
+      } finally {
+        if (mounted) setLoading(false);
       }
-    }
-  }, []);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [navigate]);
 
   useEffect(() => {
     localStorage.setItem('merchantHome:status', status);
@@ -171,12 +235,30 @@ function MerchantHome() {
     (a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0)
   );
 
+  useEffect(() => {
+    const token = sessionStorage.getItem('auth:token');
+    if (import.meta.env.DEV && token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('[DEV token payload]', payload);
+      } catch (e) {
+        console.warn('token payload decode fail', e);
+      }
+    }
+  }, []);
+
   return (
     <>
       <Header />
+
       <M.MerchantHome>
-        {stores.length === 0 ? (
-          <EmptyStoreCard />
+        {loading ? (
+          <Loading>불러오는 중…</Loading>
+        ) : stores.length === 0 ? (
+          <>
+            {fetchErr && <ErrorText>❗ {fetchErr}</ErrorText>}
+            <EmptyStoreCard />
+          </>
         ) : (
           <>
             <BusinessStatusToggle

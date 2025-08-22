@@ -1,15 +1,86 @@
-import React, { useState } from 'react';
+import React from 'react';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@components/Header';
 import * as R from '@styles/SignupRoleStyle';
 import * as S from '@styles/SignupStyle';
 
-// 체크 이미지는 URL import (이미지 방식)
 import checkUrl from '@assets/GreenCheck.svg';
 
 type Role = 'merchant' | 'consumer';
 
+const api = axios.create({
+  baseURL: 'https://n0t4u.shop',
+  headers: { 'Content-Type': 'application/json', Accept: '*/*' },
+});
+
+type PartialSignup = {
+  verifiedPhoneToken: string;
+  password: string;
+  passwordConfirm: string;
+};
+
 function SignupRole() {
   const [role, setRole] = useState<Role | null>(null);
+  const [partial, setPartial] = useState<PartialSignup | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem('signup:partial');
+    if (!raw) return setErr('이전 단계 정보가 없습니다. 처음부터 진행해주세요.');
+    try {
+      const p = JSON.parse(raw) as PartialSignup;
+      if (!p.verifiedPhoneToken || !p.password || !p.passwordConfirm) {
+        setErr('이전 단계 정보가 올바르지 않습니다.');
+        return;
+      }
+      setPartial(p);
+    } catch {
+      setErr('저장된 정보 파싱에 실패했습니다.');
+    }
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!partial) {
+      setErr('이전 단계 정보가 없습니다.');
+      return;
+    }
+    if (!role) {
+      setErr('역할을 선택해주세요.');
+      return;
+    }
+    try {
+      setSubmitting(true);
+      setErr('');
+      const payload = {
+        ...partial,
+        role: role.toUpperCase() as 'MERCHANT' | 'CONSUMER',
+      };
+      const { data, status } = await api.post('/api/auth/register', payload, {
+        validateStatus: () => true,
+      });
+      console.log('[signup status]', status, data);
+      if (status === 200 && data?.accessToken) {
+        sessionStorage.removeItem('signup:partial');
+        // TODO: accessToken을 전역/메모리에 저장하고 싶다면 여기서 처리
+        navigate('/', { replace: true });
+        return;
+      }
+      const msg =
+        typeof data === 'string'
+          ? data
+          : data?.message || '회원가입에 실패했습니다. 입력값을 확인해주세요.';
+      setErr(msg);
+    } catch (e) {
+      console.error('[signup error]', e);
+      setErr('서버 오류로 회원가입에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -47,10 +118,16 @@ function SignupRole() {
             <R.Desc>특가 정보를 받으며 똑똑하게 소비할래요</R.Desc>
           </R.Card>
         </R.List>
+        {err && <S.ErrorMessage>❗ {err}</S.ErrorMessage>}
         {/* 하단 제출 버튼 */}
         <S.BottomBar>
-          <S.PrimaryCTA type="submit">
-            <span>✓</span>
+          <S.PrimaryCTA
+            type="button"
+            onClick={handleSubmit}
+            disabled={!partial || !role || submitting}
+            aria-disabled={!partial || !role || submitting}
+          >
+            {submitting ? '처리중…' : <span>✓</span>}
           </S.PrimaryCTA>
         </S.BottomBar>
       </R.Page>

@@ -5,15 +5,14 @@
  * - 외부 상태가 필요 없으며, 초기 상태만 `initialStatus`로 지정 가능
  *
  * @example
- * import RecordButton from '@components/shared/RecordButton';
+ * import RecordButton from '@components/merchant/RecordButton';
  *
- * function Example(){
- *   return <RecordButton initialStatus="idle" />;
- * }
+ * <RecordButton initialStatus="idle" />;
  *
  * @prop {"idle"|"recording"} [initialStatus="idle"] - 초기 상태 (선택)
  * @prop {string} [className]                           - 외부 스타일 확장용 (선택)
  */
+
 import React, { useState } from 'react';
 import * as S from '@styles/merchant/component/RecordButtonStyle';
 import RecordStart from '@assets/RecordStart.svg?react';

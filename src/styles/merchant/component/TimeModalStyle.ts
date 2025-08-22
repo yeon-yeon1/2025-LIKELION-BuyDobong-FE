@@ -17,18 +17,17 @@ export const Backdrop = styled.div`
 `;
 
 export const Sheet = styled.div`
-  /* width: min(92vw, 520px); */
   width: 320px;
   background: ${palette.card};
   border-radius: 24px;
   padding: 35px 30px 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 40px ${palette.textPhotoBlur};
 `;
 
 export const Title = styled.h3`
-  margin: 0 0 12px;
-  font-size: 16px;
-  font-weight: 400;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 300;
   color: ${palette.textPrimary};
 `;
 
@@ -37,7 +36,7 @@ export const PickerWrap = styled.div`
   display: grid;
   grid-template-columns: 1fr 0.3fr 1fr;
   gap: 12px;
-  padding: 8px 0 16px;
+  height: 205px;
   overflow: hidden;
 
   &::before,
@@ -46,7 +45,7 @@ export const PickerWrap = styled.div`
     position: absolute;
     left: 0;
     right: 0;
-    height: 50%; /* 위아래 높이 비율 조절 가능 */
+    height: 50%;
     pointer-events: none;
     z-index: 3;
   }
@@ -69,11 +68,10 @@ export const CenterBar = styled.div`
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(50% - ${ITEM_H / 2 + 4}px);
-  height: ${ITEM_H}px;
-  border-radius: 10px;
+  top: calc(50% - ${ITEM_H / 2 - 13}px);
+  height: 33px;
+  border-radius: 8px;
   background: ${palette.brandBackground};
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
 `;
 
 export const Column = styled.div`
@@ -82,13 +80,11 @@ export const Column = styled.div`
   overflow: hidden;
   z-index: 1;
 
-  /* 첫 번째 컬럼(실제으론 두 번째 자식) */
   &:nth-child(2) {
     display: flex;
     justify-content: flex-end;
   }
 
-  /* 마지막 컬럼(실제으론 4번째 자식) */
   &:last-child {
     display: flex;
     flex-direction: column;
@@ -124,11 +120,11 @@ export const Item = styled.li`
   justify-content: center;
   font-size: 16px;
   letter-spacing: -0.02em;
-  color: ${palette.textDisabled3};
+  color: ${palette.textDisabled2};
   scroll-snap-align: center;
   &[aria-selected='true'] {
     color: ${palette.textPrimary};
-    font-weight: 600;
+    font-weight: 300;
   }
 `;
 

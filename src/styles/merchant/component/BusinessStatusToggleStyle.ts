@@ -54,7 +54,7 @@ export const Segment = styled.button<{ $active: boolean }>`
     background: ${({ $active }) => ($active ? palette.brandPrimary : 'transparent')};
   }
   &:last-of-type {
-    background: ${({ $active }) => ($active ? palette.textDisabled3 : 'transparent')};
+    background: ${({ $active }) => ($active ? palette.textSecondary : 'transparent')};
   }
 `;
 

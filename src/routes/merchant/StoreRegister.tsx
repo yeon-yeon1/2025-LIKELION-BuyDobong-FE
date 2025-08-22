@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Header from '@components/Header';
 import * as S from '@styles/merchant/StoreRegisterStyle';
+
 import MarketPosition, { type MarketOption } from '@components/merchant/MarketPosition';
 import MarketCard from '@components/merchant/MarketCard';
-import CheckButton from '@components/merchant/CheckButton';
+import PreviewPanel from '@components/merchant/PreviewPanel';
+
 import PlusIcon from '@assets/BlackPlus.svg?react';
-import DownArrow from '@assets/DownArrow.svg?react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 function StoreRegister() {
@@ -107,7 +108,8 @@ function StoreRegister() {
 
     const s = document.createElement('script');
     s.id = scriptId;
-    s.src = 'https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=jbpx9m7nro';
+    const clientId = import.meta.env.VITE_MAP_CLIENT;
+    s.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${clientId}`;
     s.async = true;
     s.defer = true;
     s.addEventListener('load', markReady, { once: true });
@@ -281,27 +283,16 @@ function StoreRegister() {
           />
         </S.Row>
 
-        {/* 미리보기 카드 */}
         {canPreview && (
-          <>
-            <S.PreviewCardWrap aria-label="이렇게 등록할게요">
-              <S.RegistWrapper>
-                <DownArrow />
-                <S.RegistLabel>이렇게 등록할게요</S.RegistLabel>
-              </S.RegistWrapper>
-              <MarketCard
-                name={storeName}
-                marketName={market!.name}
-                status={previewStatus}
-                imageUrl={imageUrl}
-                showArrow={false}
-              />
-              {/* 하단 체크 버튼 */}
-              <S.Bottom>
-                <CheckButton onClick={handleSubmit} />
-              </S.Bottom>
-            </S.PreviewCardWrap>
-          </>
+          <PreviewPanel title="이렇게 등록할게요" onConfirm={handleSubmit}>
+            <MarketCard
+              name={storeName}
+              marketName={market!.name}
+              status={previewStatus}
+              imageUrl={imageUrl}
+              showArrow={false}
+            />
+          </PreviewPanel>
         )}
       </S.StoreRegister>
     </>

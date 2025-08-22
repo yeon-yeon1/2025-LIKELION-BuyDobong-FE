@@ -1,16 +1,26 @@
 /*
  * RecordButton (공통)
- * - 클릭할 때마다 상태가 `idle` ↔ `recording`으로 토글되는 공통 컴포넌트
+ * - 클릭 시 상태가 `idle` ↔ `recording` 으로 전환되는 버튼
  * - 아이콘: idle = RecordStart.svg, recording = Recording.svg
- * - 외부 상태가 필요 없으며, 초기 상태만 `initialStatus`로 지정 가능
+ * - **컨트롤드/언컨트롤드** 모두 지원
+ *    - 컨트롤드: `status`를 넘기면 내부 상태를 사용하지 않고, 클릭 시 `onToggle(next)`로 다음 상태를 알려줍니다.
+ *    - 언컨트롤드: `status`를 넘기지 않으면 `initialStatus`로 내부 상태를 관리합니다.
  *
  * @example
- * import RecordButton from '@components/merchant/RecordButton';
+ * // 컨트롤드 사용 예
+ * <RecordButton
+ *   status={running ? 'recording' : 'idle'}
+ *   onToggle={(next) => setRunning(next === 'recording')}
+ * />
  *
- * <RecordButton initialStatus="idle" />;
+ * // 언컨트롤드 사용 예
+ * <RecordButton initialStatus="idle" onToggle={(next) => console.log(next)} />
  *
- * @prop {"idle"|"recording"} [initialStatus="idle"] - 초기 상태 (선택)
- * @prop {string} [className]                           - 외부 스타일 확장용 (선택)
+ * @prop {"idle"|"recording"} [status]              - 컨트롤드 상태 값(지정 시 내부 상태 미사용)
+ * @prop {"idle"|"recording"} [initialStatus="idle"] - 언컨트롤드 초기값
+ * @prop {function} [onToggle]                         - 토글될 다음 상태 콜백
+ * @prop {function} [onClick]                          - 클릭 알림(선택)
+ * @prop {string}   [className]                        - 외부 스타일 확장용(선택)
  */
 
 import React, { useState } from 'react';
@@ -21,16 +31,37 @@ import Recording from '@assets/Recording.svg?react';
 export type RecordStatus = 'idle' | 'recording';
 
 export interface RecordButtonProps {
+  status?: RecordStatus;
   initialStatus?: RecordStatus;
   className?: string;
+  onToggle?: (next: RecordStatus) => void;
+  onClick?: () => void;
 }
 
-export default function RecordButton({ initialStatus = 'idle', className }: RecordButtonProps) {
-  const [status, setStatus] = useState<RecordStatus>(initialStatus);
-  const isRecording = status === 'recording';
+export default function RecordButton({
+  status,
+  initialStatus = 'idle',
+  className,
+  onToggle,
+  onClick,
+}: RecordButtonProps) {
+  const isControlled = status !== undefined;
+  const [inner, setInner] = useState<RecordStatus>(initialStatus);
+
+  const current: RecordStatus = (isControlled ? status : inner) as RecordStatus;
+  const isRecording = current === 'recording';
 
   const handleClick = () => {
-    setStatus((prev) => (prev === 'idle' ? 'recording' : 'idle'));
+    const next: RecordStatus = isRecording ? 'idle' : 'recording';
+
+    // 언컨트롤드일 때만 내부 상태 변경
+    if (!isControlled) setInner(next);
+
+    // 부모에게 다음 상태 전달(컨트롤드/언컨트롤드 공통)
+    onToggle?.(next);
+
+    // 선택: 클릭 알림
+    onClick?.();
   };
 
   return (

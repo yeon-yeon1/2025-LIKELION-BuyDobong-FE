@@ -13,8 +13,8 @@ export const Button = styled.button<{ $selected: boolean }>`
     ${({ $selected }) => ($selected ? palette.brandPrimary : 'rgba(47, 125, 105, 0.20)')};
   background: ${palette.brandBackground};
   color: ${({ $selected }) => ($selected ? palette.brandPrimary : palette.textPrimary)};
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: ${({ $selected }) => ($selected ? 500 : 300)};
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);

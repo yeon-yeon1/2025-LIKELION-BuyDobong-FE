@@ -22,7 +22,6 @@ export const Knob = styled.div<{ $pos: 'left' | 'right' }>`
   bottom: 6px;
   width: calc(50% - 6px);
   border-radius: 12px;
-  background: linear-gradient(0deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.2) 100%);
   pointer-events: none;
 `;
 

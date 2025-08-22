@@ -6,7 +6,7 @@ export const Card = styled.div`
   padding: 10px 15px;
   background: ${palette.card};
   border-radius: 14px;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06) inset;
+  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
 
   display: flex;
   justify-content: space-between;

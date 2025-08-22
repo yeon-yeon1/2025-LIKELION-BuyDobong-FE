@@ -5,6 +5,7 @@ import * as P from '@styles/merchant/ProductRegisterStyle';
 
 import PlusButton from '@components/merchant/PlusButton';
 import ProductList, { type ProductItem } from '@components/merchant/ProductList';
+import api from '../../lib/api';
 
 function ProductRegister() {
   const navigate = useNavigate();
@@ -24,6 +25,38 @@ function ProductRegister() {
   }, [defaultMode]);
   const [items, setItems] = useState<ProductItem[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // API -> UI 매핑
+  type ApiProduct = {
+    id: number;
+    name: string;
+    regularPrice: number;
+    regularUnit: string;
+    stockLevel: 'ENOUGH' | 'LOW' | 'NONE';
+    // ↓ 서버 특가/숨김 관련 필드 추가
+    dealPrice?: number;
+    dealUnit?: string;
+    dealStartAt?: string; // ISO
+    dealEndAt?: string; // ISO
+    hidden?: boolean;
+  };
+  const toUiStock = (s: ApiProduct['stockLevel']): ProductItem['stock'] =>
+    s === 'ENOUGH' ? '충분함' : s === 'LOW' ? '적음' : '없음';
+  const toUiItem = (p: ApiProduct): ProductItem => ({
+    id: String(p.id),
+    name: p.name,
+    price: p.regularPrice,
+    unit: p.regularUnit,
+    stock: toUiStock(p.stockLevel),
+    hidden: !!p.hidden,
+    // ★ 특가 필드 전달 (서버 기준)
+    isSpecial: (p.dealPrice ?? 0) > 0 && !!p.dealStartAt && !!p.dealEndAt,
+    dealStartAt: p.dealStartAt,
+    dealEndAt: p.dealEndAt,
+    // (선택) 가격/단위도 넘기면 향후 UI 확장 용이
+    dealPrice: p.dealPrice,
+    dealUnit: p.dealUnit,
+  });
 
   // 특가 정보 맵(id -> {startTime, endTime}) (state 기반)
   const [specialsById, setSpecialsById] = useState<
@@ -64,31 +97,31 @@ function ProductRegister() {
   }, [items]);
 
   // 로컬스토리지에서 상품 목록 + 특가 맵 동시 로드 (items 내용이 동일해도 특가 즉시 반영)
-  const loadProducts = () => {
+  const loadProducts = async () => {
     try {
-      const raw = localStorage.getItem('product:list');
-      if (!raw) {
+      const res = await api.get('/api/product/me', { validateStatus: () => true });
+      console.log('[ProductRegister] fetch /api/product/me', res.status, res.data);
+      if (res.status === 200 && Array.isArray(res.data)) {
+        const list = (res.data as ApiProduct[]).map((p) => toUiItem(p));
+        setItems(list);
+        setSpecialsById(buildSpecialsById(list));
+      } else if (res.status === 204) {
         setItems([]);
         setSpecialsById({});
-        return;
-      }
-      const parsed: ProductItem[] = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        setItems(parsed);
-        // items 변경 여부와 관계없이 최신 특가 맵을 함께 구성
-        setSpecialsById(buildSpecialsById(parsed));
       } else {
+        console.warn('[ProductRegister] unexpected status', res.status, res.data);
         setItems([]);
         setSpecialsById({});
       }
-    } catch {
+    } catch (e) {
+      console.error('[ProductRegister] fetch error', e);
       setItems([]);
       setSpecialsById({});
     }
   };
 
   useEffect(() => {
-    loadProducts();
+    void loadProducts();
   }, []);
 
   // BFCache/뒤로가기 복귀 시에도 즉시 최신 특가 반영
@@ -107,7 +140,7 @@ function ProductRegister() {
 
   // 페이지로 돌아왔을 때/특가 변경 시 즉시 갱신
   useEffect(() => {
-    const onFocus = () => loadProducts();
+    const onFocus = () => void loadProducts();
 
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'product:specials' || e.key === 'product:list') {
@@ -127,7 +160,7 @@ function ProductRegister() {
   const loc = useLocation();
   useEffect(() => {
     // 라우터 이동(뒤로가기/특가 저장 후 복귀 등) 시 최신 목록/특가 동시 반영
-    loadProducts();
+    void loadProducts();
   }, [loc.key]);
 
   const appendChangeLog = (entry: any) => {

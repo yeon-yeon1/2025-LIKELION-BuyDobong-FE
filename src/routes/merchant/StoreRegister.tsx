@@ -8,7 +8,7 @@ import PreviewPanel from '@components/merchant/PreviewPanel';
 
 import PlusIcon from '@assets/BlackPlus.svg?react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../lib/api';
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -16,43 +16,23 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 // NOTE: 서버가 문자열 URL 또는 { url: string } / { imageUrl: string } 형태로 응답할 수 있음
 
 // 안전한 ASCII 파일명으로 변환 (확장자는 유지)
-const toSafeFilename = (name: string) => {
-  const dot = name.lastIndexOf('.');
-  const base = dot >= 0 ? name.slice(0, dot) : name;
-  const ext = dot >= 0 ? name.slice(dot) : '';
-  // 한글/공백/특수문자 제거, 소문자/숫자/하이픈만 허용
-  const safeBase =
-    base
-      .normalize('NFKD')
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .toLowerCase()
-      .slice(0, 50) || 'image';
-  const safeExt = ext.toLowerCase().replace(/[^.\w]/g, '');
-  return `${safeBase}${safeExt || '.png'}`;
-};
-
 const MARKET_CODE_MAP: Record<string, string> = {
   CHANDONG: 'CHANGDONG',
 };
 
 function StoreRegister() {
   const navigate = useNavigate();
-  const api = axios.create({
-    baseURL: 'https://n0t4u.shop',
-    headers: { Accept: '*/*' },
-  });
-  api.interceptors.request.use((config) => {
-    const t = sessionStorage.getItem('auth:token');
-    if (t) {
-      const short = t.slice(0, 10) + '...';
-      console.log('[store api] attach token', short);
-      config.headers = config.headers ?? {};
-      (config.headers as any).Authorization = `Bearer ${t}`;
-    }
-    return config;
-  });
+  useEffect(() => {
+    const t = (typeof window !== 'undefined' &&
+      (sessionStorage.getItem('auth:token') || localStorage.getItem('accessToken'))) as
+      | string
+      | null;
+    if (!t) return;
+    try {
+      const payload = JSON.parse(atob(t.split('.')[1] || ''));
+      console.log('[StoreRegister] token payload', payload);
+    } catch {}
+  }, []);
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState('');
   const [storeName, setStoreName] = useState('');
@@ -236,7 +216,39 @@ function StoreRegister() {
   }, [market, mapReady]);
 
   const fileRef = useRef<HTMLInputElement>(null);
-  const onPickImage = () => fileRef.current?.click();
+  // onPickImage now triggers file input and, if a file is already selected, uploads it.
+  const onPickImage = async () => {
+    if (!fileRef.current) return;
+    fileRef.current.click();
+    const input = fileRef.current;
+    setTimeout(() => {
+      const f = input.files?.[0];
+      if (!f) return;
+      // 유효성 검사
+      if (!ALLOWED_MIME.includes(f.type)) {
+        setErr('이미지 형식이 올바르지 않습니다. (허용: JPG, PNG, WEBP)');
+        setPreviewUrl(null);
+        setImageUrl(null);
+        setImageFile(null);
+        return;
+      }
+      if (f.size > MAX_FILE_SIZE) {
+        setErr('이미지 파일이 너무 큽니다. (최대 5MB)');
+        setPreviewUrl(null);
+        setImageUrl(null);
+        setImageFile(null);
+        return;
+      }
+      setErr('');
+      setImageFile(f);
+      // 즉시 미리보기
+      const url = URL.createObjectURL(f);
+      console.log('[local preview url]', url);
+      setPreviewUrl(url);
+      // No upload here; just preview and store file.
+    }, 0);
+  };
+  // onFile still handles validation and preview, but no API POST.
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -249,7 +261,7 @@ function StoreRegister() {
       return;
     }
     if (f.size > MAX_FILE_SIZE) {
-      setErr('이미지 파일이 너무 큽니다. (최대 5MB)');
+      setErr('이미지 파일이 너무 큽니다. (최대 10MB)');
       setPreviewUrl(null);
       setImageUrl(null);
       setImageFile(null);
@@ -261,109 +273,9 @@ function StoreRegister() {
     const url = URL.createObjectURL(f);
     console.log('[local preview url]', url);
     setPreviewUrl(url);
-    // 서버에 즉시 업로드 시도 -> 성공 시 서버가 준 절대 URL을 imageUrl 로 저장
-    try {
-      setUploading(true);
-      const fileToSend = f;
-      const fd = new FormData();
-      fd.append('file', fileToSend, fileToSend.name);
-      // DEBUG: FormData preview
-      console.log(
-        '[instant image upload] sending -> key=file name=%s type=%s size=%d',
-        fileToSend.name,
-        fileToSend.type,
-        fileToSend.size
-      );
-      let up = await api.post('/api/store', fd, { validateStatus: () => true });
-      console.log('[instant image upload]', up.status, up.data, up.headers);
-      if (up.status === 200 && typeof up.data === 'string') {
-        console.log('[server image url]', up.data);
-        console.log('[instant image upload] set imageUrl =', up.data);
-        setImageUrl(up.data); // 서버 URL
-        return;
-      }
-      // fallback 1: /api/store/image
-      const fd1 = new FormData();
-      fd1.append('file', fileToSend, fileToSend.name);
-      console.log(
-        '[instant image upload:/image] sending -> key=file name=%s type=%s size=%d',
-        fileToSend.name,
-        fileToSend.type,
-        fileToSend.size
-      );
-      const up2 = await api.post('/api/store', fd1, { validateStatus: () => true });
-      console.log('[instant image upload:/image]', up2.status, up2.data, up2.headers);
-      if (up2.status === 200 && typeof up2.data === 'string') {
-        console.log('[server image url]', up2.data);
-        console.log('[instant image upload:/image] set imageUrl =', up2.data);
-        setImageUrl(up2.data);
-        return;
-      }
-      // fallback 2: 필드명 대체
-      const altNames = ['image', 'multipartFile'];
-      for (const key of altNames) {
-        const fdx = new FormData();
-        fdx.append(key, fileToSend, fileToSend.name);
-        console.log(
-          '[instant image upload:field] sending -> key=%s name=%s type=%s size=%d',
-          key,
-          fileToSend.name,
-          fileToSend.type,
-          fileToSend.size
-        );
-        const resX = await api.post('/api/store', fdx, { validateStatus: () => true });
-        console.log('[instant image upload:field]', key, resX.status, resX.data, resX.headers);
-        if (resX.status === 200 && typeof resX.data === 'string') {
-          console.log('[server image url]', resX.data);
-          console.log('[instant image upload:field] set imageUrl =', resX.data);
-          setImageUrl(resX.data);
-          return;
-        }
-      }
-      // fallback 3: 상점 소유자 스코프 엔드포인트 (/api/store/{id}/image)
-      try {
-        const me = await api.get('/api/store/me', { validateStatus: () => true });
-        console.log('[instant image upload:/me]', me.status, me.data);
-        if (me.status === 200 && me.data?.id) {
-          const storeId = me.data.id;
-          const fdScoped = new FormData();
-          fdScoped.append('file', fileToSend, fileToSend.name);
-          console.log(
-            '[instant image upload:/store/{id}/image] sending -> id=%s name=%s type=%s size=%d',
-            String(storeId),
-            fileToSend.name,
-            fileToSend.type,
-            fileToSend.size
-          );
-          const upScoped = await api.post(`/api/store/${storeId}/image`, fdScoped, {
-            validateStatus: () => true,
-          });
-          console.log('[instant image upload:/store/{id}/image]', upScoped.status, upScoped.data);
-          if (upScoped.status === 200) {
-            const urlFromServer =
-              typeof upScoped.data === 'string'
-                ? upScoped.data
-                : upScoped.data?.url || upScoped.data?.imageUrl || null;
-            if (urlFromServer) {
-              console.log('[server image url]', urlFromServer);
-              setImageUrl(urlFromServer);
-              return;
-            }
-          }
-        }
-      } catch (scopedErr) {
-        console.warn('[instant image upload scoped error]', scopedErr);
-      }
-      setErr('이미지 업로드에 실패했습니다. 이미지 없이 등록을 계속할 수 있어요.');
-      setImageUrl(null);
-    } catch (er) {
-      console.warn('[instant image upload error]', er);
-      setErr('이미지 업로드 중 오류가 발생했습니다.');
-      setImageUrl(null);
-    } finally {
-      setUploading(false);
-    }
+    // Do not upload here; upload handled by onPickImage.
   };
+
   const handleSubmit = async () => {
     if (!storeName.trim() || !market) {
       alert('상호명과 위치를 선택해 주세요.');
@@ -373,80 +285,113 @@ function StoreRegister() {
       setSubmitting(true);
       setErr('');
 
-      // 0) 사전 체크: 이미 상점이 있는 계정인지 확인
+      const token =
+        (typeof window !== 'undefined' &&
+          (sessionStorage.getItem('auth:token') || localStorage.getItem('accessToken'))) ||
+        '';
+      if (!token) {
+        console.warn('[store submit] no auth token found');
+      } else {
+        console.log('[store submit] attach token', token.slice(0, 16) + '...');
+      }
+
+      // 0) 사전 체크: 내 상점 존재 여부 확인 (있으면 수정 모드로 전환)
+      let existingStoreId: number | null = null;
       try {
-        const pre = await api.get('/api/store/me', { validateStatus: () => true });
+        const pre = await api.get('/api/store/me', {
+          validateStatus: () => true,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         console.log('[store pre-check] status', pre.status, pre.data);
-        if (pre.status === 200 && pre.data) {
-          alert('이미 등록된 상점이 있습니다. 상점 홈으로 이동합니다.');
-          navigate('/merchantHome', { replace: true });
-          return;
+        if (pre.status === 403) {
+          console.warn('[store pre-check] 403 Forbidden — 토큰 권한/만료/역할 문제 가능성');
+        }
+        if (pre.status === 200 && pre.data?.id) {
+          existingStoreId = pre.data.id as number;
+          console.log('[store pre-check] detected existing store id=', existingStoreId);
         }
       } catch (e) {
         console.warn('[store pre-check] error ignored', e);
       }
 
-      // 1) 이미지 URL은 (있다면) 파일 선택 시 즉시 업로드로 확보된 값을 사용
-      let finalImageUrl = imageUrl ?? null;
-      console.log('[store create] finalImageUrl (before build)', finalImageUrl);
-
-      // 2) 상점 등록(JSON)
+      // 1) 서버가 멀티파트(data + image)를 받도록 열려있으면 한 번에 보낸다
       const serverMarket = MARKET_CODE_MAP[market.id.toUpperCase()] ?? market.id.toUpperCase();
-      const bodyPrimary: Record<string, any> = {
+
+      // 업로드 파일이 있으면 data.imgUrl는 ''로(서버가 파일 파트를 우선 사용),
+      // 업로드 파일이 없으면 기존 imageUrl을 유지(없으면 null)
+      const wantsUpload = !!imageFile;
+      const payload: Record<string, any> = {
         name: storeName.trim(),
         market: serverMarket,
         latitude: market.lat,
         longitude: market.lng,
+        imgUrl: wantsUpload ? '' : imageUrl ?? null,
       };
-      if (finalImageUrl && /^https?:\/\//i.test(finalImageUrl)) {
-        bodyPrimary.imageUrl = finalImageUrl;
-      }
-      console.log('[store create] finalImageUrl', finalImageUrl);
-      console.log('[store create] payload(primary)', JSON.stringify(bodyPrimary));
-      let res = await api.post('/api/store', bodyPrimary, {
-        headers: { 'Content-Type': 'application/json' },
-        validateStatus: () => true,
-      });
-      console.log('[store create] result(primary)', res.status, res.data);
 
-      if (res.status >= 400 && res.status !== 409) {
-        const bodyAlt: Record<string, any> = {
-          name: storeName.trim(),
-          market: serverMarket,
-          lat: market.lat,
-          lng: market.lng,
-        };
-        if (finalImageUrl && /^https?:\/\//i.test(finalImageUrl)) {
-          bodyAlt.imageUrl = finalImageUrl;
-        }
-        console.log('[store create] finalImageUrl (alt)', finalImageUrl);
-        console.log('[store create] payload(alt)', JSON.stringify(bodyAlt));
-        const resAlt = await api.post('/api/store', bodyAlt, {
-          headers: { 'Content-Type': 'application/json' },
+      const fd = new FormData();
+      fd.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+      if (wantsUpload) {
+        fd.append('image', imageFile as File, (imageFile as File).name);
+      }
+
+      let res;
+      if (existingStoreId) {
+        console.log(
+          '[store update] -> PATCH multipart /api/store/{id}',
+          existingStoreId,
+          payload,
+          imageFile?.name
+        );
+        // 멀티파트 PATCH 시 Content-Type 을 직접 설정하지 않는다. 브라우저가 boundary 포함 헤더를 자동 설정.
+        res = await api.patch(`/api/store/${existingStoreId}`, fd, {
           validateStatus: () => true,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
-        console.log('[store create] result(alt)', resAlt.status, resAlt.data);
-        if (resAlt.status === 200 || resAlt.status === 201) {
-          alert('상점이 등록되었습니다.');
-          navigate('/merchantHome', { replace: true });
-          return;
+
+        // 일부 서버는 PATCH 멀티파트를 허용하지 않을 수 있으므로 JSON 패치로 폴백
+        if (res.status >= 400 && res.status !== 415 && res.status !== 409) {
+          console.log('[store update] multipart failed, fallback JSON PATCH', res.status);
+          res = await api.patch(`/api/store/${existingStoreId}`, payload, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            validateStatus: () => true,
+          });
         }
-        res = resAlt; // 이후 공통 에러 처리
+      } else {
+        console.log('[store create] -> POST multipart /api/store', payload, imageFile?.name);
+        res = await api.post('/api/store', fd, {
+          validateStatus: () => true,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+
+        // 폴백: 서버가 multipart 미지원이면 JSON POST로 재시도
+        if (res.status >= 400 && res.status !== 415 && res.status !== 409) {
+          console.log('[store create] multipart failed, fallback JSON POST', res.status);
+          res = await api.post('/api/store', payload, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            validateStatus: () => true,
+          });
+        }
       }
 
-      if (
-        (res.status === 200 || res.status === 201) &&
-        (typeof res.data === 'string' || !!res.data)
-      ) {
-        alert('상점이 등록되었습니다.');
-        navigate('/merchantHome', { replace: true });
-        return;
-      }
+      // 공통 응답 처리
       if (res.status === 409) {
-        console.warn('[store create] 409 STORE_ALREADY_EXISTS -> redirect /merchantHome');
+        console.warn('[store create/update] 409 STORE_ALREADY_EXISTS -> redirect /merchantHome');
         navigate('/merchantHome', { replace: true });
         return;
       }
+
+      if (res.status === 200 || res.status === 201) {
+        alert(existingStoreId ? '상점 정보가 수정되었습니다.' : '상점이 등록되었습니다.');
+        navigate('/merchantHome', { replace: true });
+        return;
+      }
+
       const msg =
         typeof res.data === 'string' ? res.data : res.data?.message || '상점 등록에 실패했습니다.';
       setErr(msg);

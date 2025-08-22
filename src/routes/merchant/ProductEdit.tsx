@@ -11,6 +11,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import InputModeToggle, { type InputMode } from '@components/merchant/InputModeToggle';
 import RecordButton from '@components/merchant/RecordButton';
 import { useWebSpeechProductWizard } from '@lib/useWebSpeechProductWizard';
+import api from '@lib/api';
+
+type ApiStockLevel = 'ENOUGH' | 'LOW' | 'NONE';
+const uiToApiStock = (s: ProductDraft['stock']): ApiStockLevel =>
+  s === '충분함' ? 'ENOUGH' : s === '적음' ? 'LOW' : 'NONE';
 
 function ProductEdit() {
   const navigate = useNavigate();
@@ -71,16 +76,16 @@ function ProductEdit() {
 
   // 1) state.item 우선 반영 + 새로고침 대비 id 백업
   useEffect(() => {
-    // 홈에서 온 경우: 항상 새로 작성 (복구/초기화 스킵)
+    // 홈에서 온 경우: 항상 빈 폼으로 시작 (품명 입력 시 자동 프리필 로직이 채움)
     if (state?.source === 'home') {
-      sessionStorage.removeItem('edit:lastId');
+      try {
+        sessionStorage.removeItem('edit:lastId');
+      } catch {}
+      try {
+        sessionStorage.removeItem('product:candidate');
+      } catch {}
       setOrigin(null);
-      setDraft({
-        name: '',
-        price: null,
-        unit: '',
-        stock: '충분함',
-      });
+      setDraft({ name: '', price: null, unit: '', stock: '충분함' });
       return;
     }
 
@@ -137,25 +142,125 @@ function ProductEdit() {
     // 3) 아무 정보도 없으면 비워둠(홈 등에서 바로 들어온 케이스): 품명 자동완성에 맡김
   }, [stateItem, state?.source, state?.id]);
 
-  // 품명 입력 시 자동 완성(동일 품명 존재하면 가격/단위/재고 채움)
+  // 서버 최신 스냅샷으로 재동기화 (수정 직후 편집 화면 진입 시 구 값이 보이는 문제 방지)
+  useEffect(() => {
+    // 새 작성 플로우는 제외
+    if (state?.source === 'home') return;
+
+    // 1) 우선 id를 확보
+    const idRaw = origin?.id ?? state?.id ?? sessionStorage.getItem('edit:lastId');
+    if (!idRaw) return;
+    const idNum = /^(\d+)$/.test(String(idRaw)) ? Number(String(idRaw)) : NaN;
+
+    (async () => {
+      try {
+        const res = await api.get('/api/product/me', { validateStatus: () => true });
+        if (res.status === 200 && Array.isArray(res.data)) {
+          let fresh: any | undefined;
+          if (!Number.isNaN(idNum)) {
+            fresh = res.data.find((p: any) => Number(p?.id) === idNum);
+          }
+          if (!fresh && draft?.name) {
+            fresh = res.data.find((p: any) => String(p?.name) === String(draft.name));
+          }
+          if (fresh) {
+            // 최신값으로 origin/draft 동기화
+            const next: ProductItem = {
+              id: String(fresh.id),
+              name: fresh.name,
+              price: Number(fresh.regularPrice ?? fresh.price ?? 0),
+              unit: String(fresh.regularUnit ?? fresh.unit ?? ''),
+              stock: ((): ProductItem['stock'] => {
+                const s = String(fresh.stockLevel || '').toUpperCase();
+                return s === 'LOW' ? '적음' : s === 'NONE' ? '없음' : '충분함';
+              })(),
+            };
+            setOrigin(next);
+            setDraft({
+              name: next.name,
+              price: next.price,
+              unit: next.unit,
+              stock: next.stock,
+            });
+            sessionStorage.setItem('edit:lastId', next.id);
+          }
+        }
+      } catch (e) {
+        // 네트워크 실패 시 조용히 무시 (기존 stateItem/로컬 스냅샷 유지)
+      }
+    })();
+    // origin.id, state.id, draft.name이 바뀌면 최신값으로 다시 맞춤
+  }, [origin?.id, state?.id, draft.name, state?.source]);
+
+  // 품명 입력 시 자동 프리필: (home에서 온 경우 서버 우선) localStorage → 서버 보강 (비어있는 필드만 채움)
   useEffect(() => {
     const name = draft.name.trim();
     if (!name) return;
-    try {
-      const raw = localStorage.getItem('product:list');
-      const list: ProductItem[] = raw ? JSON.parse(raw) : [];
-      const found = list.find((p) => p.name === name);
-      if (found) {
-        setDraft((prev) => ({
-          ...prev,
-          price: found.price,
-          unit: found.unit,
-          stock: found.stock,
-        }));
-        setOrigin(found); // 기준 아이템 갱신
-      }
-    } catch {}
-  }, [draft.name]);
+
+    const fromHome = state?.source === 'home';
+
+    const needPrice = !(Number.isFinite(draft.price as any) && Number(draft.price) > 0);
+    const needUnit = !draft.unit;
+    const needStock = !draft.stock;
+    if (!needPrice && !needUnit && !needStock) return; // 이미 유저가 채운 경우 유지
+
+    const applyFrom = (p: any) => {
+      setDraft((prev) => ({
+        ...prev,
+        price: needPrice ? Number(p.regularPrice ?? p.price ?? prev.price) : prev.price,
+        unit: needUnit ? String(p.regularUnit ?? p.unit ?? (prev.unit || '')) : prev.unit,
+        stock: needStock
+          ? ((): ProductDraft['stock'] => {
+              const s = String(p.stockLevel || p.stock || '').toUpperCase();
+              return s === 'LOW' ? '적음' : s === 'NONE' ? '없음' : '충분함';
+            })()
+          : prev.stock,
+      }));
+      // origin도 최신 기준으로 동기화(미리보기에 반영)
+      setOrigin(
+        (prev) =>
+          ({
+            id: String(p.id ?? prev?.id ?? 'preview-edit'),
+            name: name,
+            price: Number(p.regularPrice ?? p.price ?? draft.price ?? 0),
+            unit: String(p.regularUnit ?? p.unit ?? draft.unit ?? ''),
+            stock: ((): ProductItem['stock'] => {
+              const s = String(p.stockLevel || p.stock || '').toUpperCase();
+              return s === 'LOW' ? '적음' : s === 'NONE' ? '없음' : '충분함';
+            })(),
+          } as ProductItem)
+      );
+    };
+
+    // (1) home에서 온 경우엔 로컬 캐시를 건너뛰고 서버만 조회
+    if (!fromHome) {
+      try {
+        const raw = localStorage.getItem('product:list');
+        if (raw) {
+          const list: any[] = JSON.parse(raw);
+          if (Array.isArray(list)) {
+            const found = list.find((p) => String(p?.name) === name);
+            if (found) {
+              applyFrom(found); // 임시 프리필 (이후 서버로 보강)
+            }
+          }
+        }
+      } catch {}
+    }
+
+    // (2) 서버에서 최신값으로 보강/덮어쓰기
+    (async () => {
+      try {
+        const res = await api.get('/api/product/me', { validateStatus: () => true });
+        if (res.status === 200 && Array.isArray(res.data)) {
+          const found = res.data.find((p: any) => String(p?.name) === name);
+          if (found) {
+            applyFrom(found); // 서버 값으로 덮어써서 수정 후에도 최신 반영
+          }
+        }
+      } catch {}
+    })();
+  }, [draft.name, state?.source]);
 
   const canPreview = useMemo(
     () => !!draft.name && draft.price !== null && draft.unit.trim().length > 0,
@@ -174,75 +279,155 @@ function ProductEdit() {
       ]
     : [];
 
-  const handleSave = () => {
-    if (!draft.name || draft.price === null || !draft.unit) return;
+  const handleSave = async () => {
+    if (!draft.name || draft.price === null || !draft.unit) {
+      alert('품명/가격/단위를 모두 입력해 주세요.');
+      return;
+    }
+
+    // 1) 가격 기초 검증: 숫자, 정수, 1 이상
+    const priceNum = Number(draft.price);
+    if (!Number.isFinite(priceNum)) {
+      alert('가격이 숫자가 아닙니다. 숫자만 입력해 주세요.');
+      return;
+    }
+    if (priceNum <= 0) {
+      alert('가격은 1 이상의 정수여야 합니다.');
+      return;
+    }
+    if (!Number.isInteger(priceNum)) {
+      alert('가격은 정수만 가능합니다.');
+      return;
+    }
+
+    // 2) 활성 특가 대비 검증: 진행 중 특가가 있으면 regularPrice는 dealPrice보다 커야 함
+    try {
+      const resCheck = await api.get('/api/product/me', { validateStatus: () => true });
+      if (resCheck.status === 200 && Array.isArray(resCheck.data)) {
+        const cur = (() => {
+          // id 우선, 없으면 이름으로 찾기
+          const idRaw = origin?.id ?? state?.id;
+          if (idRaw && /^\d+$/.test(String(idRaw))) {
+            return resCheck.data.find((p: any) => Number(p?.id) === Number(idRaw));
+          }
+          return resCheck.data.find((p: any) => String(p?.name) === String(draft.name));
+        })();
+        if (cur && cur.dealEndAt) {
+          const endTs = new Date(cur.dealEndAt).getTime();
+          const now = Date.now();
+          const active = !Number.isNaN(endTs) && now < endTs;
+          const dealPriceNum = Number(cur.dealPrice);
+          if (active && Number.isFinite(dealPriceNum) && priceNum <= dealPriceNum) {
+            alert(
+              `진행 중 특가가 있어요. 정가는 특가가(${dealPriceNum.toLocaleString()}원)보다 커야 합니다.\n- 특가 종료 후 수정하거나\n- 특가 가격을 먼저 조정해 주세요.`
+            );
+            return;
+          }
+        }
+      }
+    } catch {
+      // 체크 실패는 저장 차단하지 않음 (서버에서 한 번 더 검증)
+    }
+
+    const productIdRaw = origin?.id ?? state?.id; // UI id (string일 수 있음)
+    // 숫자 path param만 PATCH 허용. 그 외(id가 없거나 문자열 형식)는 신규 등록으로 폴백
+    let productIdStr = productIdRaw != null ? String(productIdRaw).trim() : '';
+    let productIdNum = /^\d+$/.test(productIdStr) ? Number(productIdStr) : NaN;
+
+    // ⚠️ 편집 화면으로 들어올 때 로컬/프리뷰 id("p-..."/"preview-edit")인 경우가 있어
+    // 서버에서 내 상품 목록을 조회해 같은 이름의 상품이 있으면 그 id를 우선 사용한다.
+    if (!(Number.isInteger(productIdNum) && productIdNum > 0)) {
+      try {
+        const resFind = await api.get('/api/product/me', { validateStatus: () => true });
+        if (resFind.status === 200 && Array.isArray(resFind.data)) {
+          const found = resFind.data.find((p: any) => String(p?.name) === String(draft.name));
+          if (found && /^\d+$/.test(String(found.id))) {
+            productIdStr = String(found.id);
+            productIdNum = Number(productIdStr);
+            console.log(
+              '[ProductEdit] resolved productId from server by name',
+              draft.name,
+              productIdNum
+            );
+          }
+        }
+      } catch (e) {
+        // ignore; fallback remains POST
+      }
+    }
+
+    const payload = {
+      name: draft.name,
+      regularPrice: priceNum,
+      regularUnit: draft.unit,
+      stockLevel: uiToApiStock(draft.stock),
+    };
+    console.log('[ProductEdit] payload', payload);
 
     try {
-      const raw = localStorage.getItem('product:list');
-      const list: ProductItem[] = raw ? JSON.parse(raw) : [];
+      let res;
+      if (Number.isInteger(productIdNum) && productIdNum > 0) {
+        console.log('[ProductEdit] PATCH /api/product/:id', productIdNum, payload, {
+          raw: productIdRaw,
+        });
+        res = await api.patch(`/api/product/${productIdNum}`, payload, {
+          headers: { 'Content-Type': 'application/json' },
+          validateStatus: () => true,
+        });
+      } else {
+        console.log('[ProductEdit] POST /api/product (fallback create)', payload, {
+          rawId: productIdRaw,
+        });
+        res = await api.post('/api/product', payload, {
+          headers: { 'Content-Type': 'application/json' },
+          validateStatus: () => true,
+        });
+      }
+      console.log('[ProductEdit] result', res.status, res.data);
 
-      // 덮어쓸 대상 id: origin 우선, 없으면 동일 품명 항목, 그래도 없으면 새로 생성
-      const existingByName = list.find((p) => p.name === draft.name);
-      const targetId = origin?.id ?? existingByName?.id ?? `p-${Date.now()}`;
+      if (res.status >= 200 && res.status < 300) {
+        alert(productIdNum ? '상품이 수정되었습니다.' : '상품이 등록되었습니다.');
 
-      // 동일 이름 중복 방지(자기 자신 제외)
-      const duplicated = list.some((p) => p.id !== targetId && p.name === draft.name);
-      if (duplicated) {
-        alert('이미 등록된 상품명입니다.');
+        // 로컬 캐시(product:list) 최신화
+        try {
+          const raw = localStorage.getItem('product:list');
+          const list: any[] = raw ? JSON.parse(raw) : [];
+          const idToUse = String(productIdNum || res.data?.id || origin?.id || '');
+          const idx = list.findIndex(
+            (p) => String(p?.id) === idToUse || String(p?.name) === String(draft.name)
+          );
+          const nextItem = {
+            id: idToUse || (idx >= 0 ? list[idx].id : `p-${Date.now()}`),
+            name: draft.name,
+            price: Number(draft.price),
+            unit: draft.unit,
+            stock: draft.stock,
+          };
+          if (idx >= 0) list[idx] = { ...list[idx], ...nextItem };
+          else list.unshift(nextItem);
+          localStorage.setItem('product:list', JSON.stringify(list));
+        } catch {}
+
+        if (state?.source === 'home') {
+          navigate('/merchantHome');
+        } else {
+          navigate('/productRegister');
+        }
         return;
       }
 
-      // 변경 전 스냅샷
-      const before = list.find((p) => p.id === targetId) || null;
-      const now = Date.now();
-
-      // 업데이트 객체 (updatedAt 포함)
-      const updated: ProductItem & { updatedAt?: number } = {
-        id: targetId,
-        name: draft.name,
-        price: draft.price as number,
-        unit: draft.unit,
-        stock: draft.stock,
-        updatedAt: now,
-      };
-
-      let next: ProductItem[];
-      const idx = list.findIndex((p) => p.id === targetId);
-      if (idx >= 0) {
-        next = [...list];
-        next[idx] = updated;
-      } else {
-        next = [updated, ...list];
-      }
-
-      // 저장
-      localStorage.setItem('product:list', JSON.stringify(next));
-
-      // 변경 로그 기록
-      try {
-        const changesRaw = localStorage.getItem('product:changes');
-        const changes: any[] = changesRaw ? JSON.parse(changesRaw) : [];
-        const after = {
-          name: updated.name,
-          price: updated.price,
-          unit: updated.unit,
-          stock: updated.stock,
-        };
-        const beforeSlim = before
-          ? { name: before.name, price: before.price, unit: before.unit, stock: before.stock }
-          : null;
-        changes.push({ id: targetId, updatedAt: now, before: beforeSlim, after });
-        localStorage.setItem('product:changes', JSON.stringify(changes));
-      } catch {}
-
-      sessionStorage.setItem('edit:lastId', targetId);
-      if (state?.source === 'home') {
-        navigate('/merchantHome');
-      } else {
-        navigate('/productRegister');
-      }
-    } catch (e) {
-      console.warn('[ProductEdit] failed to save item', e);
+      const msg =
+        typeof res.data === 'string' ? res.data : res.data?.message || '상품 저장에 실패했습니다.';
+      alert(msg);
+    } catch (e: any) {
+      const status = e?.response?.status;
+      const data = e?.response?.data;
+      console.error('[ProductEdit] save error', e);
+      alert(
+        status
+          ? `상품 저장 실패(${status}) ${typeof data === 'string' ? data : data?.message ?? ''}`
+          : '네트워크 오류로 상품 저장에 실패했습니다.'
+      );
     }
   };
 

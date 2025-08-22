@@ -13,6 +13,7 @@ import ProductList, { type ProductItem } from '@components/merchant/ProductList'
 
 import { useWebSpeechProductWizard } from '@lib/useWebSpeechProductWizard';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { createProduct } from '@lib/api/product';
 
 function ProductCreate() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ function ProductCreate() {
     stock: '충분함',
   });
   const isVoice = mode === 'voice';
+  const [submitting, setSubmitting] = useState(false);
 
   const handleVoiceAsk = (field: ProductFieldKey) => {
     if (typeof (wizard as any).startSingle === 'function') {
@@ -73,58 +75,70 @@ function ProductCreate() {
       ]
     : [];
 
-  const handleConfirm = () => {
-    if (!draft.name || draft.price === null || !draft.unit) return;
+  const handleConfirm = async () => {
+    if (!draft.name || draft.price === null || !draft.unit || submitting) return;
 
-    // Check for duplicate product name in localStorage
+    // 0) (선택) 로컬 중복 체크는 경고만 표시
     try {
       const raw = localStorage.getItem('product:list');
       const list: ProductItem[] = raw ? JSON.parse(raw) : [];
       const duplicate = list.some((item) => item.name === draft.name);
       if (duplicate) {
-        alert('이미 등록된 상품입니다');
-        return;
+        console.warn('[ProductCreate] duplicate name (local UI cache)');
       }
     } catch (e) {
       console.warn('[ProductCreate] failed to check duplicates', e);
     }
 
-    // 1) 백엔드 기대 포맷으로 변환 (퍼블리싱 단계에서는 콘솔로만 확인)
+    // 1) 서버 포맷으로 변환
     const toStockLevel = (s: ProductDraft['stock']) =>
       s === '충분함' ? 'ENOUGH' : s === '적음' ? 'LOW' : 'NONE';
 
     const payload = {
       name: draft.name,
       regularPrice: draft.price as number,
-      unit: draft.unit,
+      regularUnit: draft.unit,
       stockLevel: toStockLevel(draft.stock),
     } as const;
 
-    console.log('[ProductCreate] submit payload', payload);
-
-    // 2) 화면용 리스트 저장 (ProductRegister/ProductList가 사용하는 로컬 포맷)
-    //    ProductItem: { id, name, price, unit, stock }
-    const uiItem: ProductItem = {
-      id: `p-${Date.now()}`,
-      name: draft.name,
-      price: draft.price as number,
-      unit: draft.unit,
-      stock: draft.stock,
-    };
+    console.log('[ProductCreate] POST /api/product payload', payload);
 
     try {
-      const raw = localStorage.getItem('product:list');
-      const list: ProductItem[] = raw ? JSON.parse(raw) : [];
-      const next = [uiItem, ...list];
-      localStorage.setItem('product:list', JSON.stringify(next));
+      setSubmitting(true);
+      const res = await createProduct(payload);
+      console.log('[ProductCreate] /api/product result', res.status, res.data);
 
-      // localStorage.setItem('product:originalList', JSON.stringify(next));
-    } catch (e) {
-      console.warn('[ProductCreate] failed to save product:list', e);
+      if (res.status === 201) {
+        // 2) 화면 리스트(UI 캐시) 업데이트
+        const uiItem: ProductItem = {
+          id: `p-${Date.now()}`,
+          name: draft.name,
+          price: draft.price as number,
+          unit: draft.unit,
+          stock: draft.stock,
+        };
+        try {
+          const raw = localStorage.getItem('product:list');
+          const list: ProductItem[] = raw ? JSON.parse(raw) : [];
+          localStorage.setItem('product:list', JSON.stringify([uiItem, ...list]));
+        } catch (e) {
+          console.warn('[ProductCreate] failed to save product:list', e);
+        }
+
+        navigate('/productRegister');
+      } else {
+        const msg =
+          typeof res.data === 'string'
+            ? res.data
+            : res.data?.message || '상품 등록에 실패했습니다.';
+        alert(msg);
+      }
+    } catch (err: any) {
+      console.error('[ProductCreate] create error', err);
+      alert('네트워크 오류로 상품 등록에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
     }
-
-    // 3) 저장 후 상품 등록(목록) 페이지로 이동
-    navigate('/productRegister');
   };
 
   const wizard = useWebSpeechProductWizard((updater) =>
@@ -165,7 +179,10 @@ function ProductCreate() {
         <C.Gap />
 
         {canPreview && (
-          <PreviewPanel title="이렇게 등록할게요" onConfirm={handleConfirm}>
+          <PreviewPanel
+            title="이렇게 등록할게요"
+            onConfirm={submitting ? undefined : handleConfirm}
+          >
             <ProductList title={undefined} items={previewItems} showAddButton={false} />
           </PreviewPanel>
         )}

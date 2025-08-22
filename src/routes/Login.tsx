@@ -1,3 +1,5 @@
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 import Header from '@components/Header';
 import * as L from '@styles/LoginStyle';
@@ -12,12 +14,49 @@ export default function Login() {
   const [showPw, setShowPw] = useState(false);
   const [autoLogin, setAutoLogin] = useState(true);
 
+  const navigate = useNavigate();
+  const api = axios.create({
+    baseURL: 'https://n0t4u.shop',
+    headers: { 'Content-Type': 'application/json', Accept: '*/*' },
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState('');
+
   const canSubmit = phone.trim() !== '' && pw.trim() !== '';
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    // TODO: 로그인 API (phone, pw, autoLogin)
+    try {
+      setSubmitting(true);
+      setErr('');
+      const payload = { phone: phone.trim(), password: pw.trim() };
+      const { data, status } = await api.post('/api/auth/login', payload, {
+        validateStatus: () => true,
+      });
+      console.log('[login status]', status, data);
+      if (status === 200 && data?.accessToken) {
+        sessionStorage.setItem('auth:token', data.accessToken);
+        if (data.role) {
+          sessionStorage.setItem('auth:role', data.role);
+        }
+        if (data.role === 'MERCHANT') {
+          navigate('/merchantHome', { replace: true });
+        } else if (data.role === 'CONSUMER') {
+          navigate('/customerHome', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+        return;
+      }
+      const msg = typeof data === 'string' ? data : data?.message || '로그인에 실패했습니다.';
+      setErr(msg);
+    } catch (e) {
+      console.error('[login error]', e);
+      setErr('서버 오류로 로그인에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -55,7 +94,7 @@ export default function Login() {
               aria-label="비밀번호 보기 전환"
               onClick={() => setShowPw((v) => !v)}
             >
-              {showPw ? <EyeClosed /> : <EyeOpen />}
+              {showPw ? <EyeOpen /> : <EyeClosed />}
             </L.IconButton>
             {pw && (
               <L.IconButton type="button" aria-label="비밀번호 지우기" onClick={() => setPw('')}>
@@ -78,8 +117,8 @@ export default function Login() {
             <L.AutoText>자동 로그인</L.AutoText>
           </L.AutoRow>
 
-          <L.PrimaryCTA type="submit" disabled={!canSubmit}>
-            <span>✓</span>
+          <L.PrimaryCTA type="submit" disabled={!canSubmit || submitting}>
+            {submitting ? '...' : <span>✓</span>}
           </L.PrimaryCTA>
         </L.BottomBar>
       </L.Page>

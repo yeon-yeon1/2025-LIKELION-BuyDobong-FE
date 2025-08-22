@@ -3,6 +3,10 @@ import Header from '@components/Header';
 import * as S from '@styles/SignupStyle';
 import EyeOpen from '@assets/EyeOpen.svg?react';
 import EyeClosed from '@assets/EyeClosed.svg?react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
+const api = axios.create({ baseURL: 'https://n0t4u.shop' });
 
 function Signup() {
   const [phone, setPhone] = useState('');
@@ -13,12 +17,14 @@ function Signup() {
   const [pw2, setPw2] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verifiedPhoneToken, setVerifiedPhoneToken] = useState<string | null>(null);
 
   const timerRef = useRef<number | null>(null);
+  const navigate = useNavigate();
 
-  // --- 타이머 ---
   const startTimer = () => {
-    setTimeLeft(180); // 3분
+    setTimeLeft(180);
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
       setTimeLeft((s) => s - 1);
@@ -29,7 +35,6 @@ function Signup() {
     if (timeLeft <= 0 && timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
-      // 시간 만료 메시지 (인증 진행 중일 때만)
       if (authNumber.length === 0) {
         setError('인증시간이 만료되었습니다');
       }
@@ -37,27 +42,65 @@ function Signup() {
   }, [timeLeft, authNumber.length]);
 
   useEffect(() => {
-    // 언마운트 클린업
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
-  // --- 유틸 ---
+  useEffect(() => {
+    const run = async () => {
+      if (authNumber.length !== 6) return;
+      if (timeLeft <= 0) return;
+      if (!phone.trim()) return;
+      if (verifiedPhoneToken) return;
+      try {
+        setVerifying(true);
+        const { data } = await api.post('/api/sms/confirm', {
+          phone: phone.trim(),
+          certificationNumber: authNumber,
+        });
+        if (data?.verifiedPhoneToken) {
+          setVerifiedPhoneToken(data.verifiedPhoneToken);
+          setError('');
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          setTimeLeft(0);
+        } else {
+          setVerifiedPhoneToken(null);
+          setError('인증번호가 올바르지 않습니다');
+        }
+      } catch {
+        setVerifiedPhoneToken(null);
+        setError('인증번호가 올바르지 않습니다');
+      } finally {
+        setVerifying(false);
+      }
+    };
+    run();
+  }, [authNumber, timeLeft, phone, verifiedPhoneToken]);
+
   const fmt = (sec: number) => {
     const m = String(Math.max(0, Math.floor(sec / 60))).padStart(2, '0');
     const s = String(Math.max(0, sec % 60)).padStart(2, '0');
     return `${m}:${s}`;
   };
 
-  const requestCode = () => {
+  const requestCode = async () => {
     if (!phone.trim()) {
       setError('전화번호를 입력해주세요');
       return;
     }
-    setError('');
-    startTimer();
-    // TODO: 인증번호 요청 API
+    try {
+      setError('');
+      await api.post('/api/sms/send', { phone: phone.trim() });
+      startTimer();
+      setVerifiedPhoneToken(null);
+      setAuthNumber('');
+    } catch (e) {
+      setError('인증번호 요청에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    }
   };
 
   const onAuthBlur = () => {
@@ -70,24 +113,29 @@ function Signup() {
     }
   };
 
-  const authHasError = !!error; // 간단히 표시 제어
+  const authHasError = !!error;
 
   const passwordInvalid = pw.length > 0 && pw.length < 8;
   const passwordMismatch = pw2.length > 0 && pw !== pw2;
 
   const canSubmit =
     phone.trim().length > 0 &&
+    !!verifiedPhoneToken &&
     authNumber.trim().length === 6 &&
-    timeLeft > 0 &&
     !authHasError &&
     pw.length >= 8 &&
     pw === pw2;
 
-  const submitSignup = (e: React.FormEvent) => {
+  const submitSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
-    // TODO: 회원가입 API
-    // phone, authNumber, pw
+    if (!canSubmit || !verifiedPhoneToken) return;
+    const partial = {
+      verifiedPhoneToken,
+      password: pw,
+      passwordConfirm: pw2,
+    };
+    sessionStorage.setItem('signup:partial', JSON.stringify(partial));
+    navigate('/signupRole', { replace: true });
   };
 
   return (
@@ -110,7 +158,11 @@ function Signup() {
                 onChange={(e) => setPhone(e.target.value)}
               />
             </S.InputRow>
-            <S.Button type="button" onClick={requestCode} disabled={timeLeft > 0}>
+            <S.Button
+              type="button"
+              onClick={requestCode}
+              disabled={timeLeft > 0 || !!verifiedPhoneToken}
+            >
               {timeLeft > 0 ? '재요청' : '인증번호 요청'}
             </S.Button>
           </S.InputBox>
@@ -119,7 +171,7 @@ function Signup() {
         {/* 인증번호 */}
         <S.Wrapper>
           <label htmlFor="authNumber">인증번호</label>
-          <S.InputRow hasError={authHasError}>
+          <S.InputRow $hasError={authHasError}>
             <S.Input
               id="authNumber"
               type="text"
@@ -131,7 +183,14 @@ function Signup() {
             />
             <S.Timer>{fmt(timeLeft)}</S.Timer>
             {/* 체크 아이콘 (유효 길이일 때만 표시) */}
-            {authNumber.length === 6 && !authHasError && <S.Check>✓</S.Check>}
+            {authNumber.length === 6 && !authHasError && (
+              <S.Check
+                style={{ color: verifiedPhoneToken ? 'green' : undefined }}
+                aria-live="polite"
+              >
+                {verifying ? '…' : '✓'}
+              </S.Check>
+            )}
           </S.InputRow>
           {authHasError && <S.ErrorMessage>❗ {error}</S.ErrorMessage>}
         </S.Wrapper>
@@ -139,7 +198,7 @@ function Signup() {
         {/* 비밀번호 */}
         <S.Wrapper>
           <label htmlFor="password">비밀번호</label>
-          <S.InputRow hasError={passwordInvalid}>
+          <S.InputRow $hasError={passwordInvalid}>
             <S.Input
               id="password"
               type={showPw ? 'text' : 'password'}
@@ -152,7 +211,7 @@ function Signup() {
               onClick={() => setShowPw((v) => !v)}
               aria-label="비밀번호 보기 전환"
             >
-              {showPw2 ? <EyeClosed /> : <EyeOpen />}
+              {showPw ? <EyeOpen /> : <EyeClosed />}
             </S.IconButton>
             {pw && (
               <S.IconButton type="button" onClick={() => setPw('')} aria-label="비밀번호 지우기">
@@ -166,7 +225,7 @@ function Signup() {
         {/* 비밀번호 확인 */}
         <S.Wrapper>
           <label htmlFor="passwordConfirm">비밀번호 확인</label>
-          <S.InputRow hasError={passwordMismatch}>
+          <S.InputRow $hasError={passwordMismatch}>
             <S.Input
               id="passwordConfirm"
               type={showPw2 ? 'text' : 'password'}
@@ -179,7 +238,7 @@ function Signup() {
               onClick={() => setShowPw2((v) => !v)}
               aria-label="비밀번호 보기 전환"
             >
-              {showPw2 ? <EyeClosed /> : <EyeOpen />}
+              {showPw2 ? <EyeOpen /> : <EyeClosed />}
             </S.IconButton>
             {pw2 && (
               <S.IconButton type="button" onClick={() => setPw2('')} aria-label="비밀번호 지우기">

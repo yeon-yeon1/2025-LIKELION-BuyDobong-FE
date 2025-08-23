@@ -9,4 +9,5 @@ export const Header = styled.div`
   flex-shrink: 0;
   background: ${palette.brandBackground};
   box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+  z-index: 9999;
 `;

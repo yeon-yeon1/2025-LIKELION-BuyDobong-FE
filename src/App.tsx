@@ -12,6 +12,7 @@ import ProductCreate from '@routes/merchant/ProductCreate';
 import ProductEdit from '@routes/merchant/ProductEdit';
 import SpecialRegister from '@routes/merchant/SpecialRegister';
 import StoreRegister from '@routes/merchant/StoreRegister';
+import InterestMarket from '@routes/customer/InterestMarket';
 // 로그인, 회원가입
 import LoginHome from '@routes/LoginHome';
 import Login from '@routes/Login';
@@ -33,6 +34,8 @@ function App() {
         <Route path="/marketDetail" element={<MarketDetail />} />
         <Route path="/marketSearch" element={<MarketSearch />} />
         <Route path="/productSearch" element={<ProductSearch />} />
+        <Route path="/interestMarket" element={<InterestMarket />} />
+
         {/* 상인 */}
         <Route path="/merchantHome" element={<MerchantHome />} />
         <Route path="/productRegister" element={<ProductRegister />} />

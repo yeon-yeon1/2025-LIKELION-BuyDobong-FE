@@ -4,21 +4,18 @@ import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { api } from '@lib/api/api';
 import Header from '@components/Header';
+import InterestNudge from '@components/customer/InterestNudge';
 import * as K from '@styles/customer/KeywordSearchStyle';
 import SelectToggle, { type Select } from '@components/customer/SelectToggle';
 import StoreResults, { type Store } from '@components/customer/StoreResults';
-import ProductResults, {
-  type Product,
-  type ProductGroup,
-} from '@components/customer/ProductResults';
+import ProductResults, { type ProductGroup } from '@components/customer/ProductResults';
 
 /* ===================== API 타입 ===================== */
-
 type ApiStore = {
   id: number;
   name: string;
-  market: string; // 예: "SINDOBONG"
-  marketLabel: string; // 예: "신도봉시장"
+  market: string;
+  marketLabel: string;
   imageUrl: string;
   open: boolean;
 };
@@ -51,7 +48,6 @@ const SORT_ITEMS: Array<{ value: SortKey; label: string }> = [
 ];
 
 /* ===================== 시장 라벨 → 서버 키 매핑 ===================== */
-/* 실제 서버 키에 맞게 보정하세요 */
 const MARKET_LABEL_TO_KEY: Record<string, string> = {
   신도봉시장: 'SINDOBONG',
   창동골목시장: 'CHANGDONG',
@@ -62,24 +58,22 @@ const MARKET_LABEL_TO_KEY: Record<string, string> = {
 };
 const MARKET_OPTIONS = Object.keys(MARKET_LABEL_TO_KEY);
 
-/* ===================== 유틸 ===================== */
-const fmtPrice = (n: number) => `${n.toLocaleString()}원`;
-const CONSUMER_ID = 2; // TODO: 실제 로그인/컨텍스트에서 가져오기
-
 export default function KeywordSearch() {
-  /* ---------- URL 쿼리 ---------- */
   const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = (searchParams.get('query') ?? '').trim();
 
-  /* ---------- 상태 ---------- */
   const [q, setQ] = useState(urlQuery);
   const [mode, setMode] = useState<Select>('store');
 
   const [stores, setStores] = useState<Store[]>([]);
   const [groups, setGroups] = useState<ProductGroup[]>([]);
-
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
+
+  // 🔸 인풋 포커스 상태 + ref (배지 숨길 때 포커스 복구에 사용)
+  const [inputFocused, setInputFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const blurTimerRef = useRef<number | null>(null);
 
   // 정렬/필터
   const [sort, setSort] = useState<SortKey>('nearest');
@@ -98,12 +92,12 @@ export default function KeywordSearch() {
 
   const abortRef = useRef<AbortController | null>(null);
 
-  /* ---------- 쿼리와 입력 동기화 ---------- */
+  // URL ↔ 입력 동기화
   useEffect(() => {
     setQ(urlQuery);
   }, [urlQuery]);
 
-  /* ---------- API 호출 ---------- */
+  // 검색 API
   const fetchSearch = async ({
     query,
     markets,
@@ -129,22 +123,16 @@ export default function KeywordSearch() {
     try {
       const params: Record<string, any> = {
         query,
-        onlyDeal: String(onlyDeal), // ← "true"/"false"로
+        onlyDeal: String(onlyDeal),
       };
-      if (markets.length > 0) {
-        params.markets = markets.join(','); // ← 빈 배열이면 아예 안 보냄
-      }
+      if (markets.length > 0) params.markets = markets.join(',');
 
-      console.log('GET /api/consumer', { url: `/api/consumer/${CONSUMER_ID}/search`, params });
-
-      const { data } = await api.get<ApiItem[]>(`/api/consumer/${CONSUMER_ID}/search`, {
+      const { data } = await api.get<ApiItem[]>(`/api/consumer/2/search`, {
         params,
         signal: controller.signal,
       });
 
-      // 방어: 응답 형태 확인
       if (!Array.isArray(data)) {
-        console.warn('Unexpected response shape:', data);
         setStores([]);
         setGroups([]);
         return;
@@ -186,7 +174,7 @@ export default function KeywordSearch() {
     }
   };
 
-  /* ---------- URL 쿼리 변경 시 자동 검색 ---------- */
+  // URL 쿼리 변경 시 자동 검색
   useEffect(() => {
     const marketKeys =
       filter.markets.length === 0
@@ -194,9 +182,10 @@ export default function KeywordSearch() {
         : filter.markets.map((label) => MARKET_LABEL_TO_KEY[label] || '').filter(Boolean);
 
     fetchSearch({ query: urlQuery, markets: marketKeys, onlyDeal: filter.dealsOnly });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlQuery]);
 
-  /* ---------- 핸들러 ---------- */
+  // 핸들러
   const onSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const keyword = q.trim();
@@ -219,6 +208,16 @@ export default function KeywordSearch() {
     setFilterOpen(true);
   };
 
+  // 언마운트 시 blur 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (blurTimerRef.current) {
+        clearTimeout(blurTimerRef.current);
+        blurTimerRef.current = null;
+      }
+    };
+  }, []);
+
   /* ===================== 렌더 ===================== */
   return (
     <>
@@ -228,9 +227,23 @@ export default function KeywordSearch() {
         {/* 검색바 */}
         <K.SearchForm onSubmit={onSearchSubmit}>
           <K.SearchInput
+            ref={inputRef}
             placeholder="검색어를 입력해주세요"
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            onFocus={() => {
+              if (blurTimerRef.current) {
+                clearTimeout(blurTimerRef.current);
+                blurTimerRef.current = null;
+              }
+              setInputFocused(true);
+            }}
+            onBlur={() => {
+              // 배지 클릭 동작을 보장하기 위해 약간 지연 후 hide
+              blurTimerRef.current = window.setTimeout(() => {
+                setInputFocused(false);
+              }, 120);
+            }}
           />
           <K.SearchButton type="submit" aria-label="검색">
             <svg
@@ -292,6 +305,12 @@ export default function KeywordSearch() {
         ) : (
           <ProductResults groups={groups} onStoreClick={(s) => console.log('go store', s.id)} />
         )}
+
+        <InterestNudge
+          show={inputFocused && q.trim().length > 0}
+          keyword={q}
+          restoreFocusTo={() => inputRef.current}
+        />
       </K.KeywordSearch>
 
       {/* ============ 정렬 모달 ============ */}
@@ -320,8 +339,6 @@ export default function KeywordSearch() {
                 onClick={() => {
                   setSort(sortDraft);
                   setSortOpen(false);
-                  // 서버 정렬 파라미터가 없으면 여기서 클라 정렬 구현 or 필요 시 재검색:
-                  // fetchSearch({ query: urlQuery, markets: ..., onlyDeal: ... });
                 }}
               >
                 저장
@@ -336,7 +353,6 @@ export default function KeywordSearch() {
         <K.Backdrop onClick={() => setFilterOpen(false)}>
           <K.Modal onClick={(e) => e.stopPropagation()}>
             <K.ModalBody>
-              {/* 전체 / 특가만 */}
               <K.PillRow>
                 <K.Pill $big $selected={!dealsOnlyDraft} onClick={() => setDealsOnlyDraft(false)}>
                   전체
@@ -371,7 +387,6 @@ export default function KeywordSearch() {
               <K.Secondary onClick={() => setFilterOpen(false)}>취소</K.Secondary>
               <K.Primary
                 onClick={() => {
-                  // 필터 저장
                   const next = {
                     dealsOnly: dealsOnlyDraft,
                     markets: selectedMarketDraft ? [selectedMarketDraft] : [],
@@ -379,7 +394,6 @@ export default function KeywordSearch() {
                   setFilter(next);
                   setFilterOpen(false);
 
-                  // 저장 즉시 재검색
                   const marketKeys =
                     next.markets.length === 0
                       ? []

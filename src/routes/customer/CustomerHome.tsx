@@ -22,6 +22,11 @@ function CustomerHome() {
     navigate({ pathname: '/keywordSearch', search: `?query=${encodeURIComponent(keyword)}` });
   };
 
+  const onInterest = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate({ pathname: '/interestMarket' });
+  };
+
   return (
     <>
       <Header />
@@ -39,7 +44,7 @@ function CustomerHome() {
         </C.SearchForm>
 
         {/* 관심 키워드·상점 확인하기 */}
-        <C.ActionCard type="button">
+        <C.ActionCard type="button" onClick={onInterest}>
           <C.CardText>관심 키워드·상점 확인하기</C.CardText>
           <ChevronRight width={20} height={20} />
         </C.ActionCard>

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+// src/pages/customer/InterestMarket.tsx
+import React, { useEffect, useState } from 'react';
 import Header from '@components/Header';
+import { listKeywords, deleteKeyword } from '@lib/api/keywords'; // ✅ 키워드 API만 사용
 import * as I from '@styles/customer/InterestMarketStyle';
-import DeleteBtn from '@assets/deleteButton.svg?react'; // ← 방금 준 SVG 파일명으로 저장
+import DeleteBtn from '@assets/deleteButton.svg?react';
 
 type Store = {
   id: number;
@@ -11,8 +13,7 @@ type Store = {
   thumb: string;
 };
 
-// ── mock (API 붙이면 교체)
-const INIT_KEYWORDS = ['사과', '사과', '사과', '바나나', '귤', '포도', '배', '딸기'];
+// ── 상점은 아직 목업으로 유지
 const INIT_STORES: Store[] = [
   {
     id: 1,
@@ -45,32 +46,68 @@ const INIT_STORES: Store[] = [
 ];
 
 export default function InterestMarket() {
-  // 본 데이터
-  const [keywords, setKeywords] = useState<string[]>(INIT_KEYWORDS);
-  const [favStores, setFavStores] = useState<Store[]>(INIT_STORES);
-  const [recentStores] = useState<Store[]>(INIT_STORES);
-
-  // “더보기” 표기용
-  const [kwVisible, setKwVisible] = useState(3);
-  const [favVisible, setFavVisible] = useState(3);
-  const [recentVisible, setRecentVisible] = useState(3);
+  /* ---------------- 관심 키워드 (API) ---------------- */
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [kwLoading, setKwLoading] = useState(false);
+  const [kwSaving, setKwSaving] = useState(false);
 
   // 편집 상태 + 드래프트
   const [kwEditing, setKwEditing] = useState(false);
   const [kwDraft, setKwDraft] = useState<string[]>([]);
-  const [favEditing, setFavEditing] = useState(false);
-  const [favDraft, setFavDraft] = useState<Store[]>([]);
 
-  // 편집 토글
-  const toggleKwEdit = () => {
+  // 더보기
+  const [kwVisible, setKwVisible] = useState(3);
+
+  // 최초 로딩
+  useEffect(() => {
+    (async () => {
+      setKwLoading(true);
+      try {
+        const list = await listKeywords(); // GET /api/consumer/2/keyword
+        setKeywords(list.map((k) => k.word));
+        setKwVisible(3);
+      } finally {
+        setKwLoading(false);
+      }
+    })();
+  }, []);
+
+  // 편집 토글 (완료 시 삭제 반영)
+  const toggleKwEdit = async () => {
     if (!kwEditing) {
       setKwDraft(keywords);
       setKwEditing(true);
-    } else {
+      return;
+    }
+    setKwSaving(true);
+    try {
+      const removed = keywords.filter((w) => !kwDraft.includes(w));
+      if (removed.length) {
+        await Promise.allSettled(removed.map((w) => deleteKeyword(w))); // DELETE /keyword
+      }
       setKeywords(kwDraft);
+      setKwVisible((v) => Math.min(3, kwDraft.length));
+    } finally {
+      setKwSaving(false);
       setKwEditing(false);
-    } // 완료(저장)
+    }
   };
+
+  const removeKw = (idx: number) => setKwDraft((list) => list.filter((_, i) => i !== idx));
+
+  const kwList = kwEditing ? kwDraft : keywords.slice(0, kwVisible);
+  const showKwMore = !kwEditing && kwVisible < keywords.length;
+
+  /* ---------------- 상점(목업 유지) ---------------- */
+  const [favStores, setFavStores] = useState<Store[]>(INIT_STORES);
+  const [recentStores] = useState<Store[]>(INIT_STORES);
+
+  const [favVisible, setFavVisible] = useState(3);
+  const [recentVisible, setRecentVisible] = useState(3);
+
+  const [favEditing, setFavEditing] = useState(false);
+  const [favDraft, setFavDraft] = useState<Store[]>([]);
+
   const toggleFavEdit = () => {
     if (!favEditing) {
       setFavDraft(favStores);
@@ -78,20 +115,13 @@ export default function InterestMarket() {
     } else {
       setFavStores(favDraft);
       setFavEditing(false);
-    } // 완료(저장)
+    }
   };
-
-  // 삭제 핸들러(편집 중)
-  const removeKw = (idx: number) => setKwDraft((list) => list.filter((_, i) => i !== idx));
-
   const removeFav = (id: number) => setFavDraft((list) => list.filter((s) => s.id !== id));
 
-  // 표시 목록 계산 (편집 중에는 전부 노출, 아니면 more 수 만큼)
-  const kwList = kwEditing ? kwDraft : keywords.slice(0, kwVisible);
   const favList = favEditing ? favDraft : favStores.slice(0, favVisible);
   const recentList = recentStores.slice(0, recentVisible);
 
-  const showKwMore = !kwEditing && kwVisible < keywords.length;
   const showFavMore = !favEditing && favVisible < favStores.length;
   const showRecentMore = recentVisible < recentStores.length;
 
@@ -103,12 +133,14 @@ export default function InterestMarket() {
         <I.Section>
           <I.SectionHead>
             <I.SectionTitle>관심 키워드</I.SectionTitle>
-            <I.EditBtn type="button" onClick={toggleKwEdit}>
+            <I.EditBtn type="button" onClick={toggleKwEdit} disabled={kwLoading || kwSaving}>
               {kwEditing ? '완료' : '편집'}
             </I.EditBtn>
           </I.SectionHead>
 
-          {kwList.length === 0 ? (
+          {kwLoading ? (
+            <I.Empty>불러오는 중…</I.Empty>
+          ) : kwList.length === 0 ? (
             <I.Empty>
               <I.EmptyIcon>!</I.EmptyIcon>
               아직 관심 키워드가 없어요
@@ -159,7 +191,7 @@ export default function InterestMarket() {
           )}
         </I.Section>
 
-        {/* 관심 상점 */}
+        {/* 관심 상점 (목업 유지) */}
         <I.Section>
           <I.SectionHead>
             <I.SectionTitle>관심 상점</I.SectionTitle>
@@ -216,11 +248,11 @@ export default function InterestMarket() {
           )}
         </I.Section>
 
-        {/* 최근 본 상점 (편집 없음, 비었을 때는 그냥 리스트만 안 뜸) */}
+        {/* 최근 본 상점 (목업 유지) */}
         <I.Section>
           <I.SectionHead>
             <I.SectionTitle>최근 본 상점</I.SectionTitle>
-            <span /> {/* 우측 여백 맞춤 */}
+            <span />
           </I.SectionHead>
 
           <I.List>

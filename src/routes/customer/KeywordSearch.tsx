@@ -1,8 +1,8 @@
 // KeywordSearch.tsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { api } from '@lib/api/api';
+import api from '@lib/api/api';
 import Header from '@components/Header';
 import InterestNudge from '@components/customer/InterestNudge';
 import * as K from '@styles/customer/KeywordSearchStyle';
@@ -61,6 +61,7 @@ const MARKET_OPTIONS = Object.keys(MARKET_LABEL_TO_KEY);
 export default function KeywordSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = (searchParams.get('query') ?? '').trim();
+  const navigate = useNavigate();
 
   const [q, setQ] = useState(urlQuery);
   const [mode, setMode] = useState<Select>('store');
@@ -301,9 +302,15 @@ export default function KeywordSearch() {
         {loading ? (
           <K.Loading style={{ margin: '24px 12px' }}>불러오는 중…</K.Loading>
         ) : mode === 'store' ? (
-          <StoreResults stores={stores} onStoreClick={(s) => console.log('go store', s.id)} />
+          <StoreResults
+            stores={stores}
+            onStoreClick={(s) => navigate(`/marketDetail/${s.id}`)} // ✅ 여기!
+          />
         ) : (
-          <ProductResults groups={groups} onStoreClick={(s) => console.log('go store', s.id)} />
+          <ProductResults
+            groups={groups}
+            onStoreClick={(s) => navigate(`/marketDetail/${s.id}`)} // ✅ 상품쪽에서도 상점 이동
+          />
         )}
 
         <InterestNudge

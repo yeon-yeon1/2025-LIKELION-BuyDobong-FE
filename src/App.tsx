@@ -31,7 +31,7 @@ function App() {
         {/* 소비자 */}
         <Route path="/customerHome" element={<CustomerHome />} />
         <Route path="/keywordSearch" element={<KeywordSearch />} />
-        <Route path="/marketDetail" element={<MarketDetail />} />
+        <Route path="/marketDetail/:storeId" element={<MarketDetail />} />
         <Route path="/marketSearch" element={<MarketSearch />} />
         <Route path="/productSearch" element={<ProductSearch />} />
         <Route path="/interestMarket" element={<InterestMarket />} />

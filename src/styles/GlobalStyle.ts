@@ -75,6 +75,36 @@ export const GlobalStyle = createGlobalStyle`
       background-color: ${palette.brandBackground};
       height: 800px;
       overflow-y: auto;
+      overflow-x: hidden;
+
+    }
+  }
+    #root {
+      background-color: ${palette.brandBackground};
+      overflow-x: hidden;
+
+    }
+  /* 모바일 전용: 터치 디바이스 */
+  @media (hover: none) and (pointer: coarse) {
+    body {
+      background-color: ${palette.brandBackground};
+      font-family: 'Pretendard', sans-serif;
+            width: 100%;
+      margin: 0 auto;
+    }
+  }
+
+    @media (min-width: 768px) {
+    body {
+      width: 390px;
+      margin: 0 auto;
+      font-family: 'Pretendard', sans-serif;
+    }
+    #root {
+      background-color: ${palette.brandBackground};
+      height: 800px;
+      overflow-y: auto;
+      overflow-x: hidden;
 
     }
   }

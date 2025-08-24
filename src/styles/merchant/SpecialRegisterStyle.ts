@@ -66,6 +66,7 @@ export const ConfirmBtn = styled.button`
 export const Label = styled.div`
   display: flex;
   margin-bottom: 9px;
+  color: ${palette.textPrimary};
 `;
 
 export const TimeGrid = styled.div`

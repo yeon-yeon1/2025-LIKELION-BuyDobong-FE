@@ -10,10 +10,22 @@ export const Backdrop = styled.div`
   place-items: center;
   background: rgba(0, 0, 0, 0.4);
   z-index: 1000;
-  width: 390px;
   margin: 0 auto;
-  height: 800px;
   overscroll-behavior: contain;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  touch-action: none;
+
+  @media (hover: hover) and (pointer: fine) {
+    width: 390px;
+    height: 800px;
+  }
+
+  @media (min-width: 768px) {
+    width: 390px;
+    height: 800px;
+  }
 `;
 
 export const Sheet = styled.div`

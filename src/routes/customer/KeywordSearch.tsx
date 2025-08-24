@@ -128,7 +128,7 @@ export default function KeywordSearch() {
       };
       if (markets.length > 0) params.markets = markets.join(',');
 
-      const { data } = await api.get<ApiItem[]>(`/api/consumer/2/search`, {
+      const { data } = await api.get<ApiItem[]>(`/api/consumer/search`, {
         params,
         signal: controller.signal,
       });

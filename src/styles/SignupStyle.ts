@@ -121,18 +121,14 @@ export const IconButton = styled.button`
 
 // 하단 제출 바 + 버튼
 export const BottomBar = styled.div`
-  position: fixed;
-  left: 0;
-  right: 0;
-  /* 100px 고정 + 노치/홈인 레이아웃 여유 */
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+  display: block;
+  margin-top: 250px;
   display: grid;
   place-items: center;
-  padding: 0 20px;
 `;
 
 export const PrimaryCTA = styled.button`
-  width: 85%;
+  width: 100%;
   height: 56px;
   border-radius: 18px;
   border: none;

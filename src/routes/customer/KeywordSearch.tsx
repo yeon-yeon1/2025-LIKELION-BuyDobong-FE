@@ -1,121 +1,203 @@
-import React, { useMemo, useState } from 'react';
+// KeywordSearch.tsx
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import api from '@lib/api/api';
 import Header from '@components/Header';
+import InterestNudge from '@components/customer/InterestNudge';
 import * as K from '@styles/customer/KeywordSearchStyle';
 import SelectToggle, { type Select } from '@components/customer/SelectToggle';
 import StoreResults, { type Store } from '@components/customer/StoreResults';
+import ProductResults, { type ProductGroup } from '@components/customer/ProductResults';
 
-import ProductResults, {
-  type Product,
-  type ProductGroup,
-} from '@components/customer/ProductResults';
+/* ===================== API 타입 ===================== */
+type ApiStore = {
+  id: number;
+  name: string;
+  market: string;
+  marketLabel: string;
+  imageUrl: string;
+  open: boolean;
+};
+type ApiProduct = {
+  id: number;
+  name: string;
+  displayPrice: number;
+  displayUnit: string;
+  dealActive: boolean;
+  dealStartAt: string | null;
+  dealEndAt: string | null;
+};
+type ApiItem = {
+  store: ApiStore;
+  products: ApiProduct[];
+  interested: boolean;
+};
 
-// --- mock data ---
-const STORES: Store[] = [
-  {
-    id: 1,
-    name: '은지네 과일 가게',
-    market: '신도봉시장',
-    open: true,
-    thumb: 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=256&q=80',
-  },
-  {
-    id: 2,
-    name: '은지네 과일 가게',
-    market: '신도봉시장',
-    open: true,
-    thumb: 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=256&q=80',
-  },
-  {
-    id: 3,
-    name: '은지네 과일 가게',
-    market: '신도봉시장',
-    open: true,
-    thumb: 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=256&q=80',
-  },
-  {
-    id: 4,
-    name: '은지네 과일 가게',
-    market: '신도봉시장',
-    open: true,
-    thumb: 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=256&q=80',
-  },
-];
-
-const PRODUCTS: Product[] = [
-  // store 1 — 7개(더보기 보이게)
-  { id: 11, name: '사과', price: '1,000원', unit: '100g', storeId: 1 },
-  { id: 12, name: '맛있는 사과', price: '1,000원', unit: '100g', storeId: 1 },
-  {
-    id: 13,
-    name: '진짜맛있는사과바구니(병문안용)',
-    price: '30,000원',
-    unit: '1바구니',
-    storeId: 1,
-  },
-  { id: 14, name: '부사', price: '1,200원', unit: '100g', storeId: 1 },
-  { id: 15, name: '홍로', price: '900원', unit: '100g', storeId: 1 },
-  { id: 16, name: '사과 주스', price: '2,500원', unit: '1병', storeId: 1 },
-  { id: 17, name: '가을 사과', price: '1,300원', unit: '100g', storeId: 1 },
-  // store 2 — 2개(더보기 안 보임)
-  { id: 21, name: '사과', price: '1,000원', unit: '100g', storeId: 2 },
-  { id: 22, name: '사과', price: '1,000원', unit: '100g', storeId: 2 },
-];
-
-//필터링
+/* ===================== 정렬 ===================== */
 type SortKey = 'nearest' | 'recent' | 'old';
 const SORT_LABEL: Record<SortKey, string> = {
   nearest: '가까운 순',
   recent: '최근 등록한 순',
   old: '오래된 순',
 };
-
-// 스크롤 픽커 항목(전부 선택 가능)
 const SORT_ITEMS: Array<{ value: SortKey; label: string }> = [
   { value: 'nearest', label: '가까운 순' },
   { value: 'recent', label: '최근 등록한 순' },
   { value: 'old', label: '오래된 순' },
 ];
 
-const MARKET_OPTIONS = [
-  '신도봉시장',
-  '방학동도깨비시장',
-  '신창시장',
-  '창동골목시장',
-  '쌍문시장',
-  '백운시장',
-] as const;
+/* ===================== 시장 라벨 → 서버 키 매핑 ===================== */
+const MARKET_LABEL_TO_KEY: Record<string, string> = {
+  신도봉시장: 'SINDOBONG',
+  창동골목시장: 'CHANGDONG',
+  방학동도깨비시장: 'BANGHAKDONG_DOKKEBI',
+  신창시장: 'SINCHANG',
+  쌍문시장: 'SSANGMUN',
+  백운시장: 'BAEGUN',
+};
+const MARKET_OPTIONS = Object.keys(MARKET_LABEL_TO_KEY);
 
 export default function KeywordSearch() {
-  const [q, setQ] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlQuery = (searchParams.get('query') ?? '').trim();
+  const navigate = useNavigate();
+
+  const [q, setQ] = useState(urlQuery);
   const [mode, setMode] = useState<Select>('store');
 
-  const groups: ProductGroup[] = useMemo(() => {
-    return STORES.map((s) => ({
-      store: s,
-      products: PRODUCTS.filter((p) => p.storeId === s.id),
-    })).filter((g) => g.products.length > 0);
-  }, []);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [groups, setGroups] = useState<ProductGroup[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
 
-  const onSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: 검색 실행
-  };
+  // 🔸 인풋 포커스 상태 + ref (배지 숨길 때 포커스 복구에 사용)
+  const [inputFocused, setInputFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const blurTimerRef = useRef<number | null>(null);
 
-  // 정렬/필터 본 상태
+  // 정렬/필터
   const [sort, setSort] = useState<SortKey>('nearest');
   const [filter, setFilter] = useState<{ dealsOnly: boolean; markets: string[] }>({
     dealsOnly: false,
-    markets: [], // 빈 배열 = 전체
+    markets: [],
   });
+  const isFilterActive = filter.dealsOnly || filter.markets.length > 0;
 
-  // 팝업 오픈 상태
+  // 모달 상태/드래프트
   const [sortOpen, setSortOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-
-  // 팝업 내 임시 값들 (드래프트)
   const [sortDraft, setSortDraft] = useState<SortKey>('nearest');
   const [dealsOnlyDraft, setDealsOnlyDraft] = useState(false);
-  const [selectedMarketDraft, setSelectedMarketDraft] = useState<string | null>(null); // 단일 선택
+  const [selectedMarketDraft, setSelectedMarketDraft] = useState<string | null>(null);
+
+  const abortRef = useRef<AbortController | null>(null);
+
+  // URL ↔ 입력 동기화
+  useEffect(() => {
+    setQ(urlQuery);
+  }, [urlQuery]);
+
+  // 검색 API
+  const fetchSearch = async ({
+    query,
+    markets,
+    onlyDeal,
+  }: {
+    query: string;
+    markets: string[];
+    onlyDeal: boolean;
+  }) => {
+    if (!query) {
+      setStores([]);
+      setGroups([]);
+      return;
+    }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setLoading(true);
+    setErrorText(null);
+
+    try {
+      const params: Record<string, any> = {
+        query,
+        onlyDeal: String(onlyDeal),
+      };
+      if (markets.length > 0) params.markets = markets.join(',');
+
+      const { data } = await api.get<ApiItem[]>(`/api/consumer/search`, {
+        params,
+        signal: controller.signal,
+      });
+
+      if (!Array.isArray(data)) {
+        setStores([]);
+        setGroups([]);
+        return;
+      }
+
+      const nextStores: Store[] = data.map((it) => ({
+        id: it.store.id,
+        name: it.store.name,
+        market: it.store.marketLabel,
+        open: it.store.open,
+        thumb: it.store.imageUrl,
+      }));
+
+      const nextGroups: ProductGroup[] = data.map((it) => ({
+        store: {
+          id: it.store.id,
+          name: it.store.name,
+          market: it.store.marketLabel,
+          open: it.store.open,
+          thumb: it.store.imageUrl,
+        },
+        products: it.products.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: `${p.displayPrice.toLocaleString()}원`,
+          unit: p.displayUnit,
+          storeId: it.store.id,
+        })),
+      }));
+
+      setStores(nextStores);
+      setGroups(nextGroups);
+    } catch (err: any) {
+      if (!axios.isCancel(err)) {
+        setErrorText(err?.response?.data?.message || '검색 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // URL 쿼리 변경 시 자동 검색
+  useEffect(() => {
+    const marketKeys =
+      filter.markets.length === 0
+        ? []
+        : filter.markets.map((label) => MARKET_LABEL_TO_KEY[label] || '').filter(Boolean);
+
+    fetchSearch({ query: urlQuery, markets: marketKeys, onlyDeal: filter.dealsOnly });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQuery]);
+
+  // 핸들러
+  const onSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const keyword = q.trim();
+
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev);
+      if (keyword) p.set('query', keyword);
+      else p.delete('query');
+      return p;
+    });
+  };
 
   const openSort = () => {
     setSortDraft(sort);
@@ -123,25 +205,48 @@ export default function KeywordSearch() {
   };
   const openFilter = () => {
     setDealsOnlyDraft(filter.dealsOnly);
-    setSelectedMarketDraft(filter.markets[0] ?? null); // 하나만 선택
+    setSelectedMarketDraft(filter.markets[0] ?? null);
     setFilterOpen(true);
   };
 
-  const isFilterActive = filter.dealsOnly || filter.markets.length > 0;
+  // 언마운트 시 blur 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (blurTimerRef.current) {
+        clearTimeout(blurTimerRef.current);
+        blurTimerRef.current = null;
+      }
+    };
+  }, []);
 
+  /* ===================== 렌더 ===================== */
   return (
     <>
       <Header />
+
       <K.KeywordSearch>
-        {/* 검색바/정렬/토글 - 기존 그대로 */}
-        <K.SearchForm onSubmit={onSearch}>
+        {/* 검색바 */}
+        <K.SearchForm onSubmit={onSearchSubmit}>
           <K.SearchInput
+            ref={inputRef}
             placeholder="검색어를 입력해주세요"
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            onFocus={() => {
+              if (blurTimerRef.current) {
+                clearTimeout(blurTimerRef.current);
+                blurTimerRef.current = null;
+              }
+              setInputFocused(true);
+            }}
+            onBlur={() => {
+              // 배지 클릭 동작을 보장하기 위해 약간 지연 후 hide
+              blurTimerRef.current = window.setTimeout(() => {
+                setInputFocused(false);
+              }, 120);
+            }}
           />
           <K.SearchButton type="submit" aria-label="검색">
-            {/* 네가 쓰는 검색 아이콘으로 교체 가능 */}
             <svg
               viewBox="0 0 24 24"
               width="22"
@@ -156,10 +261,18 @@ export default function KeywordSearch() {
           </K.SearchButton>
         </K.SearchForm>
 
+        {/* 결과 상단 바 */}
         <K.ResultBar>
           <K.Query>
-            <K.Em>‘사과’</K.Em> 검색 결과
+            {urlQuery ? (
+              <>
+                <K.Em>‘{urlQuery}’</K.Em> 검색 결과
+              </>
+            ) : (
+              '키워드를 입력해 검색하세요'
+            )}
           </K.Query>
+
           <K.SortGroup>
             <K.SortBtn type="button" onClick={openSort}>
               {SORT_LABEL[sort]}
@@ -167,25 +280,47 @@ export default function KeywordSearch() {
                 <path d="M7 10l5 5 5-5H7z" />
               </svg>
             </K.SortBtn>
+
             <K.FilterButton $active={isFilterActive} onClick={openFilter} aria-label="필터">
               <K.FilterIcon $active={isFilterActive} aria-hidden />
             </K.FilterButton>
           </K.SortGroup>
         </K.ResultBar>
 
+        {/* 상점/상품 토글 */}
         <K.ToggleWrap>
           <SelectToggle value={mode} onChange={setMode} />
         </K.ToggleWrap>
 
-        {/* 토글에 따라 다른 컴포넌트 렌더 -> 상점 / 상품 */}
-        {mode === 'store' ? (
-          <StoreResults stores={STORES} onStoreClick={(s) => console.log('go store', s.id)} />
-        ) : (
-          <ProductResults groups={groups} onStoreClick={(s) => console.log('go store', s.id)} />
+        {/* 메시지/로딩/결과 */}
+        {errorText && (
+          <K.ErrorText role="alert" style={{ margin: '8px 12px' }}>
+            {errorText}
+          </K.ErrorText>
         )}
+
+        {loading ? (
+          <K.Loading style={{ margin: '24px 12px' }}>불러오는 중…</K.Loading>
+        ) : mode === 'store' ? (
+          <StoreResults
+            stores={stores}
+            onStoreClick={(s) => navigate(`/marketDetail/${s.id}`)} // ✅ 여기!
+          />
+        ) : (
+          <ProductResults
+            groups={groups}
+            onStoreClick={(s) => navigate(`/marketDetail/${s.id}`)} // ✅ 상품쪽에서도 상점 이동
+          />
+        )}
+
+        <InterestNudge
+          show={inputFocused && q.trim().length > 0}
+          keyword={q}
+          restoreFocusTo={() => inputRef.current}
+        />
       </K.KeywordSearch>
 
-      {/* 정렬 모달 */}
+      {/* ============ 정렬 모달 ============ */}
       {sortOpen && (
         <K.Backdrop onClick={() => setSortOpen(false)}>
           <K.Modal onClick={(e) => e.stopPropagation()}>
@@ -197,7 +332,7 @@ export default function KeywordSearch() {
                     role="option"
                     aria-selected={sortDraft === it.value}
                     $selected={sortDraft === it.value}
-                    onClick={() => setSortDraft(it.value)} // ✅ 언제나 선택 가능
+                    onClick={() => setSortDraft(it.value)}
                   >
                     {it.label}
                   </K.PickItem>
@@ -220,11 +355,11 @@ export default function KeywordSearch() {
         </K.Backdrop>
       )}
 
+      {/* ============ 필터 모달 ============ */}
       {filterOpen && (
         <K.Backdrop onClick={() => setFilterOpen(false)}>
           <K.Modal onClick={(e) => e.stopPropagation()}>
             <K.ModalBody>
-              {/* 전체 / 특가만 */}
               <K.PillRow>
                 <K.Pill $big $selected={!dealsOnlyDraft} onClick={() => setDealsOnlyDraft(false)}>
                   전체
@@ -235,8 +370,6 @@ export default function KeywordSearch() {
               </K.PillRow>
 
               <K.SectionTitle>시장</K.SectionTitle>
-
-              {/* 시장 전체 (단일 선택) */}
               <K.PillRow>
                 <K.Pill
                   $big
@@ -245,13 +378,13 @@ export default function KeywordSearch() {
                 >
                   전체
                 </K.Pill>
-                {MARKET_OPTIONS.map((m) => (
+                {MARKET_OPTIONS.map((label) => (
                   <K.Pill
-                    key={m}
-                    $selected={selectedMarketDraft === m}
-                    onClick={() => setSelectedMarketDraft(m)}
+                    key={label}
+                    $selected={selectedMarketDraft === label}
+                    onClick={() => setSelectedMarketDraft(label)}
                   >
-                    {m}
+                    {label}
                   </K.Pill>
                 ))}
               </K.PillRow>
@@ -261,11 +394,24 @@ export default function KeywordSearch() {
               <K.Secondary onClick={() => setFilterOpen(false)}>취소</K.Secondary>
               <K.Primary
                 onClick={() => {
-                  setFilter({
+                  const next = {
                     dealsOnly: dealsOnlyDraft,
-                    markets: selectedMarketDraft ? [selectedMarketDraft] : [], // 단일 선택 반영
-                  });
+                    markets: selectedMarketDraft ? [selectedMarketDraft] : [],
+                  };
+                  setFilter(next);
                   setFilterOpen(false);
+
+                  const marketKeys =
+                    next.markets.length === 0
+                      ? []
+                      : next.markets
+                          .map((label) => MARKET_LABEL_TO_KEY[label] || '')
+                          .filter(Boolean);
+                  fetchSearch({
+                    query: (searchParams.get('query') ?? '').trim(),
+                    markets: marketKeys,
+                    onlyDeal: next.dealsOnly,
+                  });
                 }}
               >
                 저장

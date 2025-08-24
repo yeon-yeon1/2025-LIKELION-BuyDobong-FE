@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import palette from '@lib/colorPalette';
 
 export const Page = styled.div`
-  padding: 0 20px 120px; /* 하단 버튼 공간 */
+  padding: 0 20px;
 `;
 
 export const Head = styled.h1`
@@ -72,7 +72,6 @@ export const AutoRow = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-left: 30px;
 `;
 
 export const CheckImgButton = styled.button`
@@ -107,7 +106,7 @@ export const BottomBar = styled.div`
 `;
 
 export const PrimaryCTA = styled.button`
-  width: min(420px, calc(100% - 60px));
+  width: 100%;
   height: 50px;
   border-radius: 18px;
   border: none;

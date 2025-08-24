@@ -58,7 +58,7 @@ export const IconButton = styled.button`
   border: none;
   background: transparent;
   cursor: pointer;
-  color: ${palette.textDisabled3}; /* 아이콘 기본색 */
+  color: ${palette.textDisabled}; /* 아이콘 기본색 */
 
   svg {
     width: 22px;
@@ -98,13 +98,8 @@ export const AutoText = styled.span`
 `;
 
 export const BottomBar = styled.div`
-  position: fixed;
-  left: 0;
-  right: 0;
-  /* 100px 고정 + 노치/홈인 레이아웃 여유 */
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
-
-  padding: 0 20px;
+  display: block;
+  margin-top: 400px;
   display: flex;
   flex-direction: column;
   gap: 12px;

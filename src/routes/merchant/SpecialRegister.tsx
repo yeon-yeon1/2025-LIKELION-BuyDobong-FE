@@ -647,26 +647,102 @@ function SpecialRegister() {
   // 저장(특가 등록 연동)
   const handleSave = async () => {
     if (!canPreview) return;
+    console.log('[SpecialRegister] start save', {
+      passedItemId: (passedItem as any)?.id,
+      passedItemName: (passedItem as any)?.name,
+      draftName: draft.name,
+      initialName: initialNameRef.current,
+      navState,
+    });
 
-    // 1) productId 확보: nav에서 온 id가 숫자면 사용, 아니면 서버 목록에서 찾기
-    const idRaw = (passedItem as any)?.id;
+    // 1) productId 확보 (안전) — 홈에서 진입했다면 passedItem/idFromNav를 무시하고 이름 기준으로 선택
+    const fromHome = navState?.source === 'home' || navState?.from === '/merchantHome';
+
+    const idRaw = !fromHome ? (passedItem as any)?.id : undefined;
     const idFromNav = idRaw != null && /^\d+$/.test(String(idRaw)) ? Number(idRaw) : NaN;
 
-    const nameFromNav = (passedItem as any)?.name || draft.name;
-    let productIdNum = idFromNav;
+    // passedItem이 있으면 그 이름만 신뢰(입력창에서 바꾼 draft.name은 무시)
+    // 단, 홈 진입일 때는 nameFromPassed를 쓰지 않고 draft.name으로만 조회 허용
+    const nameFromPassed: string | undefined = !fromHome ? (passedItem as any)?.name : undefined;
+    const lookupName: string | undefined = fromHome
+      ? draft.name
+      : nameFromPassed ?? (!passedItem ? draft.name : undefined);
 
-    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
-      try {
+    let productIdNum = idFromNav;
+    console.log('[SpecialRegister] resolved initial ids/names', {
+      fromHome,
+      idRaw,
+      idFromNav,
+      nameFromPassed,
+      lookupName,
+      productIdNum_initial: productIdNum,
+    });
+
+    // 💡 사용자가 의도적으로 다른 상품명으로 바꿨다면, 그 이름으로 타겟 재설정
+    // (idFromNav가 유효하더라도, 입력한 이름이 초기 기준과 다르면 이름 기준으로 재선택)
+    try {
+      console.log('[SpecialRegister] override-check', {
+        typedName: String(draft.name || '').trim(),
+        baseName:
+          (initialNameRef.current && String(initialNameRef.current)) ||
+          ((passedItem as any)?.name ? String((passedItem as any).name) : ''),
+      });
+      const typedName = String(draft.name || '').trim();
+      // 비교 기준: initialNameRef가 있으면 그걸, 없으면 passedItem.name을 사용
+      const baseName =
+        (initialNameRef.current && String(initialNameRef.current)) ||
+        ((passedItem as any)?.name ? String((passedItem as any).name) : '');
+
+      const mustResolveByTyped = fromHome; // 홈 진입 시에는 항상 입력한 이름으로 대상 확정
+      const userWantsDifferent = !!typedName && !!baseName && typedName !== baseName;
+      console.log('[SpecialRegister] userWantsDifferent =', userWantsDifferent);
+      console.log('[SpecialRegister] mustResolveByTyped =', mustResolveByTyped);
+
+      if (mustResolveByTyped || userWantsDifferent) {
         const res = await api.get('/api/product/me', { validateStatus: () => true });
         if (res.status === 200 && Array.isArray(res.data)) {
-          // 우선 정확히 같은 이름으로 찾기 (merchantHome -> edit 경로 대응)
-          const found = res.data.find((p: any) => String(p?.name) === String(nameFromNav));
-          if (found && /^\d+$/.test(String(found.id))) {
-            productIdNum = Number(found.id);
+          console.log('[SpecialRegister] fetched product list for name override', {
+            listCount: Array.isArray(res.data) ? res.data.length : -1,
+          });
+          const matches = res.data.filter((p: any) => String(p?.name) === typedName);
+          if (matches.length === 1 && /^\d+$/.test(String(matches[0].id))) {
+            productIdNum = Number(matches[0].id); // ★ idFromNav를 덮어쓴다
+            console.log('[SpecialRegister] override applied, new productIdNum =', productIdNum);
+          } else if (matches.length > 1) {
+            alert(
+              '같은 이름의 상품이 여러 개라서 대상을 특정할 수 없어요. 상품 상세에서 다시 시도해 주세요.'
+            );
+            return;
+          } else {
+            alert('입력한 이름과 정확히 일치하는 상품을 찾지 못했어요.');
+            return;
           }
         }
-      } catch {
-        // ignore; 아래에서 검증
+      }
+    } catch {
+      alert('상품 조회 중 오류가 발생했어요. 다시 시도해 주세요.');
+      return;
+    }
+
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      console.log('[SpecialRegister] fallback lookup by lookupName', { lookupName });
+      if (lookupName && String(lookupName).trim().length > 0) {
+        try {
+          const res = await api.get('/api/product/me', { validateStatus: () => true });
+          if (res.status === 200 && Array.isArray(res.data)) {
+            // 이름 **정확 일치**만 허용 (모호성 방지)
+            const matches = res.data.filter((p: any) => String(p?.name) === String(lookupName));
+            if (matches.length === 1 && /^\d+$/.test(String(matches[0].id))) {
+              productIdNum = Number(matches[0].id);
+              console.log('[SpecialRegister] fallback resolved productIdNum =', productIdNum);
+            } else if (matches.length > 1) {
+              alert('같은 이름의 상품이 여러 개예요. 상품 상세에서 다시 시도해 주세요.');
+              return;
+            }
+          }
+        } catch {
+          // 무시하고 아래에서 최종 검증
+        }
       }
     }
 
@@ -674,25 +750,58 @@ function SpecialRegister() {
       alert('특가를 걸 상품을 먼저 선택해 주세요. (상품 ID 확인 실패)');
       return;
     }
+    console.log('[SpecialRegister] product id ready for method decision', { productIdNum });
+
+    // 1.5) 서버 상태로 생성/수정 결정 (POST vs PATCH)
+    // 1.5) 서버 상태로 생성/수정 결정 (POST vs PATCH) — 인라인 active 판별
+    let method: 'post' | 'patch' = 'post';
+    try {
+      console.log('[SpecialRegister] deciding method via server-state...', { productIdNum });
+      const res = await api.get('/api/product/me', { validateStatus: () => true });
+      if (res.status === 200 && Array.isArray(res.data)) {
+        const found = res.data.find((it: any) => String(it.id) === String(productIdNum));
+        if (found) {
+          const hasDeal =
+            Number(found?.dealPrice) > 0 || !!found?.dealStartAt || !!found?.dealEndAt;
+          const notEnded = !found?.dealEndAt || new Date(found.dealEndAt).getTime() > Date.now();
+          const active = hasDeal && notEnded; // (= isSpecialActive(found))
+          console.log('[SpecialRegister] server-state snapshot', {
+            targetId: productIdNum,
+            foundId: found?.id,
+            name: found?.name,
+            dealPrice: found?.dealPrice,
+            dealStartAt: found?.dealStartAt,
+            dealEndAt: found?.dealEndAt,
+            active,
+          });
+          method = active ? 'patch' : 'post';
+          console.log('[SpecialRegister] method decided =', method);
+        }
+      }
+    } catch {}
 
     // 2) 시간 ISO 변환 (오늘 날짜 기준, 종료가 시작보다 이르면 +1일)
     const now = new Date();
 
     // Build local "YYYY-MM-DDTHH:mm:ss" strings (no trailing 'Z')
-    let startLocal = hhmmToISO(startTime, now); // e.g. "2025-08-23T10:00:00"
-    let endLocal = hhmmToISO(endTime, now); // e.g. "2025-08-23T12:00:00"
+    let startLocal = hhmmToISO(startTime, now);
+    let endLocal = hhmmToISO(endTime, now);
 
     // Compare as local time
     const startDate = new Date(startLocal);
     let endDate = new Date(endLocal);
     if (endDate.getTime() <= startDate.getTime()) {
-      // If end is not after start, roll over to the next day
       endDate = new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
-      // Re-format back to local "YYYY-MM-DDTHH:mm:ss"
       endLocal = toLocalISOStringNoZ(endDate);
     }
 
-    // Send local timestamps as-is (no `.toISOString()` -> avoids UTC shift like +9h)
+    console.log('[SpecialRegister] time window (local)', {
+      startTime,
+      endTime,
+      startLocal,
+      endLocal,
+    });
+
     const payload = {
       dealPrice: Number(draft.price),
       dealUnit: draft.unit,
@@ -700,11 +809,8 @@ function SpecialRegister() {
       dealEndAt: endLocal,
     };
 
-    const method: 'post' | 'patch' = isEditingSpecial ? 'patch' : 'post';
-
-    try {
-      console.log('[SpecialRegister] upsert special', method.toUpperCase(), productIdNum, payload);
-      const res = await (method === 'post'
+    const execSave = async (m: 'post' | 'patch') =>
+      m === 'post'
         ? api.post(`/api/product/${productIdNum}/deal`, payload, {
             headers: { 'Content-Type': 'application/json' },
             validateStatus: () => true,
@@ -712,52 +818,78 @@ function SpecialRegister() {
         : api.patch(`/api/product/${productIdNum}/deal`, payload, {
             headers: { 'Content-Type': 'application/json' },
             validateStatus: () => true,
-          }));
-      console.log('[SpecialRegister] result', res.status, res.data);
+          });
 
-      if (res.status >= 200 && res.status < 300) {
-        // per-product 기본 시간 저장(다음에 자동 제안)
-        saveSpecialTimes(draft.name, startTime, endTime);
-        try {
-          saveLastSpecial(
-            productIdNum,
-            Number(draft.price),
-            String(draft.unit),
-            startTime,
-            endTime
-          );
-        } catch {}
+    let res;
+    try {
+      console.log('[SpecialRegister] upsert special', method.toUpperCase(), productIdNum, payload);
+      res = await execSave(method);
+      // 상태 불일치 시 한 번 반대로 재시도
+      if (res.status >= 400 && res.status < 500) {
+        const alt: 'post' | 'patch' = method === 'post' ? 'patch' : 'post';
+        console.warn('[SpecialRegister] retry with', alt.toUpperCase(), 'due to', res.status);
+        res = await execSave(alt);
+      }
+      console.log('[SpecialRegister] final response status after optional retry =', res?.status);
+    } catch (e) {
+      console.error('[SpecialRegister] deal upsert error', e);
+      alert('특가 등록 중 오류가 발생했습니다.');
+      return;
+    }
 
-        // 기존 퍼블리싱용 로컬 상태도 유지(홈 배너 등 임시 UI 호환)
-        try {
-          localStorage.setItem(
-            'merchantHome:specialCurrent',
-            JSON.stringify({
-              name: draft.name,
-              price: draft.price,
-              unit: draft.unit,
-              startTime,
-              endTime,
-              createdAt: Date.now(),
-            })
-          );
-        } catch {}
+    console.log('[SpecialRegister] result', res.status, res.data);
 
-        try {
-          sessionStorage.setItem('special:lastFrom', returnTo);
-        } catch {}
-
-        navigate(returnTo);
+    // 응답이 다른 상품 id를 가리키면 즉시 중단 (안전장치)
+    try {
+      console.log('[SpecialRegister] response id guard check', {
+        expected: productIdNum,
+        got: res?.data && (res.data as any).id,
+      });
+      const resId = res?.data && (res.data as any).id ? Number((res.data as any).id) : undefined;
+      if (resId != null && Number.isFinite(resId) && String(resId) !== String(productIdNum)) {
+        console.warn('[SpecialRegister] Warning: response id mismatch', {
+          expected: productIdNum,
+          got: resId,
+          data: res.data,
+        });
+        alert('응답의 상품 ID가 일치하지 않습니다. 상품 상세에서 다시 시도해 주세요.');
         return;
       }
+    } catch {}
 
-      const msg =
-        typeof res.data === 'string' ? res.data : res.data?.message || '특가 등록에 실패했습니다.';
-      alert(msg);
-    } catch (e) {
-      console.error('[SpecialRegister] deal create error', e);
-      alert('특가 등록 중 오류가 발생했습니다.');
+    if (res.status >= 200 && res.status < 300) {
+      // per-product 기본 시간 저장(다음에 자동 제안)
+      saveSpecialTimes(draft.name, startTime, endTime);
+      try {
+        saveLastSpecial(productIdNum, Number(draft.price), String(draft.unit), startTime, endTime);
+      } catch {}
+
+      // 기존 퍼블리싱용 로컬 상태도 유지(홈 배너 등 임시 UI 호환)
+      try {
+        localStorage.setItem(
+          'merchantHome:specialCurrent',
+          JSON.stringify({
+            name: draft.name,
+            price: draft.price,
+            unit: draft.unit,
+            startTime,
+            endTime,
+            createdAt: Date.now(),
+          })
+        );
+      } catch {}
+
+      try {
+        sessionStorage.setItem('special:lastFrom', returnTo);
+      } catch {}
+
+      navigate(returnTo);
+      return;
     }
+
+    const msg =
+      typeof res.data === 'string' ? res.data : res.data?.message || '특가 등록에 실패했습니다.';
+    alert(msg);
   };
 
   return (

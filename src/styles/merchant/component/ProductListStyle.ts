@@ -258,9 +258,22 @@ export const ModalOverlay = styled.div`
   justify-content: center;
   background: rgba(0, 0, 0, 0.45);
 
-  width: 390px;
   margin: 0 auto;
-  height: 800px;
+
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  touch-action: none;
+
+  @media (hover: hover) and (pointer: fine) {
+    width: 390px;
+    height: 800px;
+  }
+
+  @media (min-width: 768px) {
+    width: 390px;
+    height: 800px;
+  }
 `;
 
 export const ModalContent = styled.div`

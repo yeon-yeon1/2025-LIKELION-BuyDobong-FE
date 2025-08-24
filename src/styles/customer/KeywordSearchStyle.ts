@@ -420,3 +420,7 @@ export const CheckItem = styled.button<{ $selected?: boolean }>`
     font-weight: 900;
   }
 `;
+
+export const ErrorText = styled.div``;
+
+export const Loading = styled.div``;

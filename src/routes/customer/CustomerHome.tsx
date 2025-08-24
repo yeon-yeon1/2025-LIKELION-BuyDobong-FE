@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@components/Header';
 import * as C from '@styles/customer/CustomerHomeStyle';
 import SearchIcon from '@assets/SearchIcon.svg?react';
@@ -12,11 +13,13 @@ const ChevronRight = (props: React.SVGProps<SVGSVGElement>) => (
 function CustomerHome() {
   const [q, setQ] = useState(''); //검색어 입력 상태 관리
   const [notify, setNotify] = useState(true);
+  const navigate = useNavigate();
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!q.trim()) return;
-    // TODO: 검색 실행
+    const keyword = q.trim();
+    if (!keyword) return;
+    navigate({ pathname: '/keywordSearch', search: `?query=${encodeURIComponent(keyword)}` });
   };
 
   return (

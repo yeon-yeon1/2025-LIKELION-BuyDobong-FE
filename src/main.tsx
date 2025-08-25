@@ -13,7 +13,6 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 );
 
-// Ensure Service Worker registers in production (and on Vercel)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker

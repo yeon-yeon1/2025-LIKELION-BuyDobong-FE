@@ -12,3 +12,16 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>
 );
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js', { scope: '/' })
+      .then((reg) => {
+        console.log('[sw] registered at', reg.scope);
+      })
+      .catch((err) => {
+        console.error('[sw] register failed', err);
+      });
+  });
+}

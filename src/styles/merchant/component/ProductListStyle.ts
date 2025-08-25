@@ -185,6 +185,10 @@ export const ActionBar = styled.div`
   align-items: center;
   gap: 12px;
   padding: 9px 0 0;
+
+  @media (max-width: 768px) {
+    justify-content: space-around;
+  }
 `;
 
 export const PrimaryBtn = styled.button`
@@ -246,6 +250,12 @@ export const RowWrap = styled.div<{ $expanded?: boolean; $hidden?: boolean; $isS
   padding: ${({ $isSpecial }) => ($isSpecial ? '3px 11px 8px 13px' : '')};
   box-shadow: ${({ $expanded }) => ($expanded ? '0 0 4px 0 rgba(0,0,0,0.10)' : 'none')};
   margin: ${({ $expanded }) => ($expanded ? '0 9px 0 12px' : '0 7px 0 11px')};
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 `;
 
 // 모달
@@ -258,9 +268,22 @@ export const ModalOverlay = styled.div`
   justify-content: center;
   background: rgba(0, 0, 0, 0.45);
 
-  width: 390px;
   margin: 0 auto;
-  height: 800px;
+
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  touch-action: none;
+
+  @media (hover: hover) and (pointer: fine) {
+    width: 390px;
+    height: 800px;
+  }
+
+  @media (min-width: 768px) {
+    width: 390px;
+    height: 800px;
+  }
 `;
 
 export const ModalContent = styled.div`

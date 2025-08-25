@@ -85,12 +85,15 @@ export default function InterestMarket() {
   const toMarketLabel = (market: string, marketLabel?: string) =>
     marketLabel || MARKET_KEY_TO_LABEL[market] || market; // 라벨 우선, 없으면 코드→라벨, 그래도 없으면 원본
 
+  //빈 배경값 대체
+  const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=256&q=80';
+
   const mapFavToStore = (s: FavStore): Store => ({
     id: s.id,
     name: s.name,
     market: toMarketLabel(s.market, s.marketLabel),
     open: s.open,
-    thumb: s.imageUrl || 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=256&q=80',
+    thumb: s.imageUrl && s.imageUrl.trim() ? s.imageUrl : FALLBACK_THUMB, // imageUrl 우선
   });
 
   useEffect(() => {
@@ -146,7 +149,7 @@ export default function InterestMarket() {
     name: s.name,
     market: toMarketLabel(s.market, s.marketLabel),
     open: s.open,
-    thumb: s.imageUrl || 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=256&q=80',
+    thumb: s.imageUrl && s.imageUrl.trim() ? s.imageUrl : FALLBACK_THUMB, // imageUrl 우선
   });
 
   useEffect(() => {
@@ -188,6 +191,15 @@ export default function InterestMarket() {
 
   const recentList = recentEditing ? recentDraft : recentStores.slice(0, recentVisible);
   const showRecentMore = !recentEditing && recentVisible < recentStores.length;
+
+  //영업중 / 영업종료 onoff
+  function OpenStatusChip({ open }: { open: boolean }) {
+    return (
+      <I.Chip $green={open} aria-label={open ? '영업중' : '영업 종료'}>
+        <I.Dot /> {open ? '영업중' : '영업 종료'}
+      </I.Chip>
+    );
+  }
 
   /* ---------- 렌더 ---------- */
   return (
@@ -265,7 +277,7 @@ export default function InterestMarket() {
           </I.SectionHead>
 
           {favLoading ? (
-            <I.Empty>불러오는 중…</I.Empty>
+            <I.Empty>불러오는 중...</I.Empty>
           ) : favList.length === 0 ? (
             <I.Empty>
               <I.EmptyIcon>!</I.EmptyIcon>아직 관심 상점이 없어요
@@ -279,16 +291,12 @@ export default function InterestMarket() {
                     if (!favEditing) navigate(`/marketDetail/${s.id}`);
                   }}
                 >
-                  <I.Thumb src={s.thumb} alt="" />
+                  <I.Thumb src={s.thumb} alt={s.name} loading="lazy" />
                   <I.Info>
                     <I.Title>{s.name}</I.Title>
                     <I.MetaRow>
                       <I.Chip>{s.market}</I.Chip>
-                      {s.open && (
-                        <I.Chip $green>
-                          <I.Dot /> 영업중
-                        </I.Chip>
-                      )}
+                      <OpenStatusChip open={s.open} />
                     </I.MetaRow>
                   </I.Info>
 
@@ -332,7 +340,7 @@ export default function InterestMarket() {
           </I.SectionHead>
 
           {recentLoading ? (
-            <I.Empty>불러오는 중…</I.Empty>
+            <I.Empty>불러오는 중...</I.Empty>
           ) : recentList.length === 0 ? (
             <I.Empty>
               <I.EmptyIcon>!</I.EmptyIcon>최근 본 상점이 없어요
@@ -346,16 +354,12 @@ export default function InterestMarket() {
                     if (!recentEditing) navigate(`/marketDetail/${s.id}`);
                   }}
                 >
-                  <I.Thumb src={s.thumb} alt="" />
+                  <I.Thumb src={s.thumb} alt={s.name} loading="lazy" />
                   <I.Info>
                     <I.Title>{s.name}</I.Title>
                     <I.MetaRow>
                       <I.Chip>{s.market}</I.Chip>
-                      {s.open && (
-                        <I.Chip $green>
-                          <I.Dot /> 영업중
-                        </I.Chip>
-                      )}
+                      <OpenStatusChip open={s.open} />
                     </I.MetaRow>
                   </I.Info>
 

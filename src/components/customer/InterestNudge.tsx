@@ -203,7 +203,7 @@ export default function InterestNudge({
 
 /* ===== styled ===== */
 
-/** 고정 도킹 레이어: 여기서 키보드 높이만큼 translateY로 올림 */
+/** 고정 도킹 레이어 */
 const Dock = styled.div`
   position: fixed;
   left: 12px;
@@ -265,13 +265,11 @@ const Label = styled.span`
 `;
 
 const Circle = styled.button`
-  width: 44px;
-  height: 44px;
-  border: none;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
   display: grid;
   place-items: center;
   cursor: pointer;
+  border: none;
+  background-color: transparent;
   & > svg {
     width: 44px;
     height: 44px;

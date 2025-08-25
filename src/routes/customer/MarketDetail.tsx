@@ -157,7 +157,7 @@ export default function StoreDetailPage() {
       </div>
 
       <S.Wrap>
-        {/* 고정 배경(히어로) — 스크롤해도 배경은 그대로, 살짝 페이드/블러만 */}
+        {/* 고정 배경(히어로) — 스크롤해도 배경은 그대로 블러만 */}
         <S.Hero
           style={{
             backgroundImage: `url("${heroBg}")`,
@@ -178,7 +178,9 @@ export default function StoreDetailPage() {
           <S.ShopContainer>
             <S.ChipRow>
               <S.Chip tone="muted">{detail?.marketLabel || '시장'}</S.Chip>
-              {detail?.open && <S.Chip tone="success">● 영업중</S.Chip>}
+              <S.Chip tone={detail?.open ? 'success' : 'danger'}>
+                {detail?.open ? '● 영업중' : '● 영업 종료'}
+              </S.Chip>
             </S.ChipRow>
             <S.ShopName>{detail?.name || '상점명'}</S.ShopName>
           </S.ShopContainer>

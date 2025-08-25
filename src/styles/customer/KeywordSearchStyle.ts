@@ -1,7 +1,6 @@
 import styled, { css } from 'styled-components';
 import palette from '@lib/colorPalette';
 import { rgba } from 'polished';
-import checkUrl from '@assets/GreenCheck.svg?url';
 import FilterSvg from '@assets/FilterButton.svg?react';
 
 /* 썸네일 크기 옵션 */
@@ -107,7 +106,7 @@ export const SearchForm = styled.form`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 14px;
+  padding: 6px 14px;
   border-radius: 18px;
   background: ${palette.card};
   border: 1px solid ${palette.brandPrimary};
@@ -118,7 +117,9 @@ export const SearchInput = styled.input`
   border: 0;
   outline: 0;
   background: transparent;
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 22px;
+  -webkit-text-size-adjust: 100%;
   color: ${palette.textDisabled};
   &::placeholder {
     color: ${palette.textSecondary};
@@ -225,7 +226,7 @@ export const SortBtn = styled.button`
   border-radius: 9999px;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
   color: ${palette.textPrimary};
   font-size: 14px;
   cursor: pointer;
@@ -237,6 +238,8 @@ export const FilterButton = styled.button<{ $active?: boolean }>`
   background-color: transparent;
   border: none;
   padding: 0;
+  display: flex;
+  align-items: center;
 `;
 
 export const FilterIcon = styled(FilterSvg)<{ $active?: boolean }>`

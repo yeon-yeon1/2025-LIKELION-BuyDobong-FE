@@ -412,7 +412,6 @@ export const CheckItem = styled.button<{ $selected?: boolean }>`
 
   /* 왼쪽 체크 아이콘 */
   &::before {
-    content: ${({ $selected }) => ($selected ? "'✓'" : "''")};
     display: inline-block;
     width: 18px;
     text-align: center;

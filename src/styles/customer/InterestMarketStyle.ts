@@ -20,21 +20,21 @@ export const SectionHead = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border-radius: 14px;
-  background: ${palette.brandBackground};
+  border-radius: 12px;
+  background-color: ${palette.brandPrimary20};
 `;
 export const SectionTitle = styled.h2`
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 400;
   color: ${palette.textPrimary};
   margin: 0 5px;
 `;
 export const EditBtn = styled.button`
   border: 0;
   background: transparent;
-  color: ${palette.textPrimary};
+  color: ${palette.brandPrimary};
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
 `;
 

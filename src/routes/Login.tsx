@@ -39,8 +39,6 @@ export default function Login() {
         const token: string = data.accessToken;
 
         // ✅ 1) 토큰은 항상 같은 키에도 저장 (기존 코드들과의 호환)
-        // - 새 코드: 'accessToken' (auto-login에 따라 local/session)
-        // - 구 코드: 'auth:token' (일관성 위해 항상 세션에도 보관)
         if (autoLogin) {
           localStorage.setItem('accessToken', token);
           sessionStorage.removeItem('accessToken');

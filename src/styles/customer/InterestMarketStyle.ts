@@ -113,12 +113,13 @@ export const Chip = styled.span<{ $green?: boolean }>`
   background: ${({ $green }) => ($green ? 'rgba(47,125,105,0.15)' : '#edf0f2')};
   color: ${({ $green }) => ($green ? palette.brandPrimary : palette.textSecondary)};
 `;
-export const Dot = styled.span`
+export const Dot = styled.span<{ $gray?: boolean }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: ${palette.brandPrimary};
+  background: ${({ $gray }) => ($gray ? palette.textSecondary : palette.brandPrimary)};
 `;
+
 export const Chevron = styled.div`
   color: ${palette.textSecondary};
   font-size: 22px;

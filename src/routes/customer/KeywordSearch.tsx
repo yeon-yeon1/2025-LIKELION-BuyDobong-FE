@@ -81,8 +81,8 @@ export default function KeywordSearch() {
   // 정렬/필터
   const [sort, setSort] = useState<SortKey>('nearest');
   const [filter, setFilter] = useState<{ dealsOnly: boolean; markets: string[] }>({
-    dealsOnly: false, // ← '전체'
-    markets: [], // ← '전체' (아무 것도 선택 안 함)
+    dealsOnly: false, // '전체'
+    markets: [], // '전체' (아무 것도 선택 안 함)
   });
   const isFilterActive = filter.dealsOnly || filter.markets.length > 0;
 
@@ -310,15 +310,9 @@ export default function KeywordSearch() {
         {loading ? (
           <K.Loading style={{ margin: '24px 12px' }}>불러오는 중…</K.Loading>
         ) : mode === 'store' ? (
-          <StoreResults
-            stores={stores}
-            onStoreClick={(s) => navigate(`/marketDetail/${s.id}`)} // ✅ 여기!
-          />
+          <StoreResults stores={stores} onStoreClick={(s) => navigate(`/marketDetail/${s.id}`)} />
         ) : (
-          <ProductResults
-            groups={groups}
-            onStoreClick={(s) => navigate(`/marketDetail/${s.id}`)} // ✅ 상품쪽에서도 상점 이동
-          />
+          <ProductResults groups={groups} onStoreClick={(s) => navigate(`/marketDetail/${s.id}`)} />
         )}
 
         <InterestNudge
@@ -385,7 +379,7 @@ export default function KeywordSearch() {
                 <K.Pill
                   $big
                   $selected={selectedMarketDraft.length === 0}
-                  onClick={() => setSelectedMarketDraft([])} // ✅ 전체(초기화)
+                  onClick={() => setSelectedMarketDraft([])} // 전체(초기화)
                 >
                   {selectedMarketDraft.length === 0 && <CheckIcon aria-hidden />}
                   전체

@@ -1,6 +1,10 @@
 import styled from 'styled-components';
 import palette from '@lib/colorPalette';
 
+export interface ChipProps {
+  tone?: 'success' | 'muted' | 'danger';
+}
+
 export const MarketDetail = styled.div``;
 
 export const Wrap = styled.div`
@@ -91,20 +95,20 @@ export const ChipRow = styled.div`
   margin-bottom: 8px;
 `;
 
-export interface ChipProps {
-  tone?: 'success' | 'muted';
-}
 export const Chip = styled.span<ChipProps>`
   display: inline-flex;
   align-items: center;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   padding: 6px 10px;
   border-radius: 12px;
-  color: ${({ tone }) => (tone === 'success' ? '#0d6e3f' : '#516063')};
-  background: ${({ tone }) => (tone === 'success' ? '#e3f7ec' : '#e7eeea')};
-`;
 
+  color: ${({ tone }) =>
+    tone === 'success' ? '#0d6e3f' : tone === 'danger' ? '#6B6B6F' : '#6B6B6F'};
+
+  background: ${({ tone }) =>
+    tone === 'success' ? '#e3f7ec' : tone === 'danger' ? '#DDD' : '#EEF1EE'};
+`;
 export const ShopName = styled.div`
   font-size: 18px;
   font-weight: 600;

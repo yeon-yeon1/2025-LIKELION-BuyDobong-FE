@@ -39,7 +39,7 @@ async function getPushStatus(): Promise<{ pushEnabled: boolean } | null> {
 // 수정
 async function patchPushEnabled(enabled: boolean): Promise<boolean> {
   try {
-    const res = await api.patch('/api/consumer/push', { enabled });
+    const res = await api.patch('/api/consumer/push', { pushEnabled: enabled });
     const serverEnabled = (res.data?.pushEnabled ?? res.data?.enabled ?? enabled) as boolean;
     console.log('[push] patchPushEnabled ->', res.status, res.data);
     return !!serverEnabled;

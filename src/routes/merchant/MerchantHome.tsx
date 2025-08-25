@@ -83,7 +83,7 @@ const marketDisplayName = (market: string) => {
       return '방학동도깨비시장';
     case 'SINCHANG':
       return '신창시장';
-    case 'CHANDONG':
+    case 'CHANGDONG':
       return '창동골목시장';
     case 'SSANGMUN':
       return '쌍문시장';

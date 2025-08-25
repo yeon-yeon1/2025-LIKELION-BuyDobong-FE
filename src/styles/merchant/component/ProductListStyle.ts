@@ -185,6 +185,10 @@ export const ActionBar = styled.div`
   align-items: center;
   gap: 12px;
   padding: 9px 0 0;
+
+  @media (max-width: 768px) {
+    justify-content: space-around;
+  }
 `;
 
 export const PrimaryBtn = styled.button`

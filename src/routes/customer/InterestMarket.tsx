@@ -196,7 +196,7 @@ export default function InterestMarket() {
   function OpenStatusChip({ open }: { open: boolean }) {
     return (
       <I.Chip $green={open} aria-label={open ? '영업중' : '영업 종료'}>
-        <I.Dot /> {open ? '영업중' : '영업 종료'}
+        <I.Dot $gray={!open} /> {open ? '영업중' : '영업 종료'}
       </I.Chip>
     );
   }

@@ -193,22 +193,38 @@ export const MetaRow = styled.div`
   gap: 8px;
   flex-wrap: wrap;
 `;
-export const Chip = styled.span<{ $green?: boolean }>`
+
+export const Chip = styled.span<{ $green?: boolean; $gray?: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
   border-radius: 9999px;
   font-size: 13px;
-  background: ${({ $green }) => ($green ? 'rgba(47,125,105,0.15)' : '#edf0f2')};
-  color: ${({ $green }) => ($green ? palette.brandPrimary : palette.textSecondary)};
+
+  background: ${({ $green, $gray }) =>
+    $green
+      ? 'rgba(47,125,105,0.15)' /* 영업중(초록) */
+      : $gray
+      ? '#ddd' /* 영업종료(회색) */
+      : '#eee'}; /* 기본 */
+
+  color: ${({ $green, $gray }) =>
+    $green
+      ? palette.brandPrimary /* 영업중 텍스트 */
+      : $gray
+      ? '#6B6B6F' /* 영업종료 텍스트(회색) */
+      : palette.textSecondary}; /* 기본 */
 `;
-export const Dot = styled.span`
+
+export const Dot = styled.span<{ $green?: boolean; $gray?: boolean }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: ${palette.brandPrimary};
+  background: ${({ $green, $gray }) =>
+    $green ? palette.brandPrimary : $gray ? '#9AA3A6' : palette.textSecondary};
 `;
+
 export const Chevron = styled.div`
   color: ${palette.textSecondary};
 `;

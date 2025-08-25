@@ -30,8 +30,9 @@ const StoreResults: React.FC<Props> = ({ stores, onStoreClick }) => {
             <K.Title>{s.name}</K.Title>
             <K.MetaRow>
               <K.Chip>{s.market}</K.Chip>
-              <K.Chip $green>
-                <K.Dot /> {s.open ? '영업중' : '준비중'}
+              <K.Chip $green={s.open} $gray={!s.open}>
+                <K.Dot $green={s.open} $gray={!s.open} />
+                {s.open ? '영업중' : '영업 종료'}
               </K.Chip>
             </K.MetaRow>
           </K.Info>

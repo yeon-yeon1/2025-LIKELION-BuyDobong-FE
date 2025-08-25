@@ -76,7 +76,7 @@ export default function InterestMarket() {
   const MARKET_KEY_TO_LABEL: Record<string, string> = {
     SINDOBONG: '신도봉시장',
     CHANGDONG: '창동골목시장',
-    BANGHAKDONG_DOKKEBI: '방학동도깨비시장',
+    BANGHAKDONG: '방학동도깨비시장',
     SINCHANG: '신창시장',
     SSANGMUN: '쌍문시장',
     BAEGUN: '백운시장',

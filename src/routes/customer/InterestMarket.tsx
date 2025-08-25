@@ -6,6 +6,7 @@ import { listFavoriteStores, unfavoriteStore, type FavStore } from '@lib/api/fav
 import { listRecentStores, removeRecentStore, type RecentStore } from '@lib/api/recent';
 import * as I from '@styles/customer/InterestMarketStyle';
 import DeleteBtn from '@assets/deleteButton.svg?react';
+import { useNavigate } from 'react-router-dom';
 
 type Store = {
   id: number;
@@ -16,6 +17,9 @@ type Store = {
 };
 
 export default function InterestMarket() {
+  /* ---------- 상세 상점 이동 ---------- */
+  const navigate = useNavigate();
+
   /* ---------- 관심 키워드 ---------- */
   const [keywords, setKeywords] = useState<string[]>([]);
   const [kwLoading, setKwLoading] = useState(false);
@@ -140,7 +144,7 @@ export default function InterestMarket() {
   const mapRecentToStore = (s: RecentStore): Store => ({
     id: s.id,
     name: s.name,
-    market: s.marketLabel ?? s.market,
+    market: toMarketLabel(s.market, s.marketLabel),
     open: s.open,
     thumb: s.imageUrl || 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=256&q=80',
   });
@@ -269,7 +273,12 @@ export default function InterestMarket() {
           ) : (
             <I.List>
               {favList.map((s) => (
-                <I.Card key={s.id} onClick={() => !favEditing && console.log('go store', s.id)}>
+                <I.Card
+                  key={s.id}
+                  onClick={() => {
+                    if (!favEditing) navigate(`/marketDetail/${s.id}`);
+                  }}
+                >
                   <I.Thumb src={s.thumb} alt="" />
                   <I.Info>
                     <I.Title>{s.name}</I.Title>
@@ -333,7 +342,9 @@ export default function InterestMarket() {
               {recentList.map((s) => (
                 <I.Card
                   key={`r-${s.id}`}
-                  onClick={() => !recentEditing && console.log('go store', s.id)}
+                  onClick={() => {
+                    if (!recentEditing) navigate(`/marketDetail/${s.id}`);
+                  }}
                 >
                   <I.Thumb src={s.thumb} alt="" />
                   <I.Info>

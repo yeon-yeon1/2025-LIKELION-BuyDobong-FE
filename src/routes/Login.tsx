@@ -72,7 +72,7 @@ export default function Login() {
               id="phone"
               type="tel"
               inputMode="tel"
-              placeholder="010-2127-7693"
+              placeholder="010 0000 0000"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />

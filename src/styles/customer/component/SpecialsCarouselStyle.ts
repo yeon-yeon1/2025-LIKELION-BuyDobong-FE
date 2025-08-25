@@ -4,10 +4,9 @@ import styled from 'styled-components';
 export const Row = styled.div`
   display: grid;
   grid-auto-flow: column;
-  gap: 12px;
   overflow-x: auto;
   padding-bottom: 4px;
-
+  gap: 12px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 

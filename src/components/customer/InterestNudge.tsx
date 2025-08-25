@@ -8,20 +8,24 @@ import { createKeyword, deleteKeyword, listKeywords } from '@lib/api/keywords';
 type Props = {
   show: boolean;
   keyword: string;
-  interested?: boolean; // 외부 제어값 있으면 우선
+  interested?: boolean;
+  /** 키보드와의 간격(px). 기존 bottomOffset → gap 개념으로 사용 */
   bottomOffset?: number;
-  restoreFocusTo?: () => HTMLElement | null; // 숨길 때 포커스 되돌릴 대상
+  restoreFocusTo?: () => HTMLElement | null;
 };
 
 export default function InterestNudge({
   show,
   keyword,
   interested,
-  bottomOffset = 96,
+  bottomOffset = 12, // ← “키보드 위 12px” 기본 간격
   restoreFocusTo,
 }: Props) {
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
+
+  // 키보드(=visual viewport) 보정 값
+  const [kb, setKb] = useState(0);
 
   // 내 관심 키워드 Set (소문자/trim 정규화)
   const [kwSet, setKwSet] = useState<Set<string>>(new Set());
@@ -29,9 +33,41 @@ export default function InterestNudge({
   const fetchedRef = useRef(false);
   const norm = (w: string) => w.trim().toLowerCase();
 
-  // inert + 포커스 복구
+  /* ===== 키보드(VisualViewport) 반영 ===== */
   useEffect(() => {
-    const el = wrapRef.current;
+    const vv = (window as any).visualViewport as VisualViewport | undefined;
+
+    const update = () => {
+      const v = (window as any).visualViewport as VisualViewport | undefined;
+      if (!v) {
+        setKb(0);
+        return;
+      }
+      // 레이아웃 viewport(=window.innerHeight) 대비 하단이 잘린 만큼을 계산
+      const overlap = Math.max(0, window.innerHeight - (v.height + v.offsetTop));
+      setKb(overlap); // 키보드가 차지한 높이 추정
+    };
+
+    update();
+
+    if (vv) {
+      vv.addEventListener('resize', update);
+      vv.addEventListener('scroll', update);
+      return () => {
+        vv.removeEventListener('resize', update);
+        vv.removeEventListener('scroll', update);
+      };
+    }
+
+    // 폴백: viewport API 없으면 스크롤에 맞춰 0으로
+    const onScroll = () => setKb(0);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  /* ===== inert + 포커스 복구 ===== */
+  useEffect(() => {
+    const el = dockRef.current;
     if (!el) return;
 
     if (!show) {
@@ -47,7 +83,7 @@ export default function InterestNudge({
     }
   }, [show, restoreFocusTo]);
 
-  // 처음 열릴 때 1회 목록 조회 (이미 가져왔으면 생략)
+  /* ===== 처음 열릴 때 1회 목록 조회 ===== */
   useEffect(() => {
     if (!show || fetchedRef.current) return;
     fetchedRef.current = true;
@@ -61,7 +97,7 @@ export default function InterestNudge({
     })();
   }, [show]);
 
-  // keyword / interested / kwSet 변동 시 on 상태 계산
+  /* ===== keyword / interested / kwSet 동기화 ===== */
   useEffect(() => {
     const k = norm(keyword);
     if (!k) {
@@ -75,26 +111,21 @@ export default function InterestNudge({
     setOn(kwSet.has(k));
   }, [keyword, interested, kwSet]);
 
-  // 등록
+  /* ===== 등록/해제 ===== */
   const handleAdd = async () => {
     const kRaw = keyword.trim();
     const k = norm(kRaw);
     if (!k || saving) return;
-
-    // 이미 있다면 서버 안 두드리고 즉시 on
     if (kwSet.has(k)) {
       setOn(true);
       return;
     }
-
     setSaving(true);
     try {
       await createKeyword(kRaw);
-      // 낙관적 업데이트
       setKwSet((prev) => new Set(prev).add(k));
       setOn(true);
     } catch (e: any) {
-      // 중복(409)도 성공으로 간주
       if (e?.response?.status === 409) {
         setKwSet((prev) => new Set(prev).add(k));
         setOn(true);
@@ -104,22 +135,17 @@ export default function InterestNudge({
     }
   };
 
-  // 해제
   const handleRemove = async () => {
     const kRaw = keyword.trim();
     const k = norm(kRaw);
     if (!k || saving) return;
-
-    // 없다면 서버 안 두드리고 즉시 off
     if (!kwSet.has(k)) {
       setOn(false);
       return;
     }
-
     setSaving(true);
     try {
       await deleteKeyword(kRaw);
-      // 낙관적 업데이트
       setKwSet((prev) => {
         const next = new Set(prev);
         next.delete(k);
@@ -134,44 +160,60 @@ export default function InterestNudge({
   const disabled = saving || !show;
 
   return (
-    <Wrap
-      ref={wrapRef}
-      data-show={show ? 'y' : undefined}
-      style={{ bottom: `calc(env(safe-area-inset-bottom, 0px) + ${bottomOffset}px)` }}
+    <Dock
+      ref={dockRef}
+      style={
+        {
+          // 키보드 높이만큼 위로 올림
+          transform: `translateY(-${kb}px)`,
+          // safe-area + 원하는 간격
+          '--gap': `${bottomOffset}px`,
+        } as React.CSSProperties
+      }
     >
-      {on ? (
-        <Circle
-          type="button"
-          aria-label="관심 키워드 해제"
-          onMouseDown={(e) => e.preventDefault()} // 인풋 blur 방지
-          onClick={handleRemove}
-          disabled={disabled}
-        >
-          <HeartOn />
-        </Circle>
-      ) : (
-        <Pill
-          type="button"
-          aria-label="관심키워드 등록"
-          onMouseDown={(e) => e.preventDefault()} // 인풋 blur 방지
-          onClick={handleAdd}
-          disabled={disabled}
-        >
-          <Icon aria-hidden>
-            <HeartAdd />
-          </Icon>
-          <Label>관심키워드 등록</Label>
-        </Pill>
-      )}
-    </Wrap>
+      <Wrap data-show={show ? 'y' : undefined}>
+        {on ? (
+          <Circle
+            type="button"
+            aria-label="관심 키워드 해제"
+            onMouseDown={(e) => e.preventDefault()} // 인풋 blur 방지
+            onClick={handleRemove}
+            disabled={disabled}
+          >
+            <HeartOn />
+          </Circle>
+        ) : (
+          <Pill
+            type="button"
+            aria-label="관심키워드 등록"
+            onMouseDown={(e) => e.preventDefault()} // 인풋 blur 방지
+            onClick={handleAdd}
+            disabled={disabled}
+          >
+            <Icon aria-hidden>
+              <HeartAdd />
+            </Icon>
+            <Label>관심키워드 등록</Label>
+          </Pill>
+        )}
+      </Wrap>
+    </Dock>
   );
 }
 
 /* ===== styled ===== */
-const Wrap = styled.div`
+
+/** 고정 도킹 레이어: 여기서 키보드 높이만큼 translateY로 올림 */
+const Dock = styled.div`
   position: fixed;
   left: 12px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--gap, 12px));
   z-index: 2000;
+  pointer-events: none; /* 내부에서 켬 */
+`;
+
+/** 실제 배지 래퍼: 표시/숨김 트랜지션만 담당 */
+const Wrap = styled.div`
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 160ms ease, transform 160ms ease;

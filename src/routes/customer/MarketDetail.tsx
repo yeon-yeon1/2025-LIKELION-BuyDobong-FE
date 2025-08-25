@@ -13,16 +13,13 @@ import InterestedOff from '@assets/InterestedOff.svg?react';
 import { getStoreDetail, type StoreDetail, type StockLevel } from '@lib/api/stores';
 import { favoriteStore, unfavoriteStore } from '@lib/api/favorites';
 
-const HERO_MAX = 220; // 초기 배너 높이(px)
+const HERO_MAX = 220;
 
 function fmtTimeRange(start?: string | null, end?: string | null) {
   if (!start || !end) return '';
   const toHM = (iso: string) => {
     const d = new Date(iso);
-    // 로컬 HH:MM (두 자리)
-    const hh = `${d.getHours()}`.padStart(2, '0');
-    const mm = `${d.getMinutes()}`.padStart(2, '0');
-    return `${hh}:${mm}`;
+    return `${`${d.getHours()}`.padStart(2, '0')}:${`${d.getMinutes()}`.padStart(2, '0')}`;
   };
   return `${toHM(start)} - ${toHM(end)}`;
 }
@@ -40,30 +37,27 @@ function stockBadge(level: StockLevel) {
 
 export default function StoreDetailPage() {
   const { storeId } = useParams<{ storeId: string }>();
-  const id = Number(storeId); // 라우트에서 넘어온 상점 id
-  const heroRef = useRef<HTMLDivElement | null>(null);
+  const id = Number(storeId);
 
   const [collapse, setCollapse] = useState(0); // 0~1
   const [fav, setFav] = useState(false);
-
   const [detail, setDetail] = useState<StoreDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [savingFav, setSavingFav] = useState(false);
 
-  // 스크롤 효과
+  // 스크롤에 따른 collapse (히어로는 고정, 카드/썸네일 연출만)
   useEffect(() => {
     const onScroll = () => {
-      const y = window.scrollY;
-      const next = Math.min(1, Math.max(0, y / HERO_MAX));
-      setCollapse(next);
+      const y = window.scrollY; // Wrap이 윈도우 스크롤이면 그대로 사용
+      setCollapse(Math.min(1, Math.max(0, y / HERO_MAX)));
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // 상세 API 호출
+  // 상세
   useEffect(() => {
     if (!Number.isFinite(id)) return;
     let alive = true;
@@ -87,29 +81,25 @@ export default function StoreDetailPage() {
     };
   }, [id]);
 
-  // 관심 on/off
+  // 즐겨찾기 토글
   const onToggleFav = async () => {
     if (!Number.isFinite(id) || savingFav) return;
     const next = !fav;
     setFav(next);
     setSavingFav(true);
     try {
-      if (next) {
-        await favoriteStore(id); // POST { storeId }
-      } else {
-        await unfavoriteStore(id); // DELETE /{storeId}
-      }
-      // 상세 상태와도 동기화 (옵션)
-      setDetail((d) => (d ? ({ ...d, favorite: next } as StoreDetail) : d));
+      if (next) await favoriteStore(id);
+      else await unfavoriteStore(id);
+      setDetail((d) => (d ? { ...d, favorite: next } : d) as StoreDetail | null);
     } catch (e) {
-      console.error('favorite toggle failed', e);
       setFav(!next); // 롤백
+      console.error('favorite toggle failed', e);
     } finally {
       setSavingFav(false);
     }
   };
 
-  // SpecialsCarousel 매핑
+  // 캐러셀/그리드 데이터 매핑
   const specials: SpecialItem[] = useMemo(() => {
     if (!detail?.deals) return [];
     return detail.deals.map((d) => {
@@ -126,7 +116,6 @@ export default function StoreDetailPage() {
     });
   }, [detail]);
 
-  // ProductGrid 매핑
   const products: ProductItem[] = useMemo(() => {
     if (!detail?.products) return [];
     return detail.products.map((p) => {
@@ -142,11 +131,17 @@ export default function StoreDetailPage() {
     });
   }, [detail]);
 
+  // 히어로 배경
+  const FALLBACK_HERO = 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1200&q=80';
+  const heroBg = useMemo(() => detail?.imageUrl?.trim() || FALLBACK_HERO, [detail?.imageUrl]);
+
+  // 썸네일 변환: -28px(떠있음) → 0px(카드 자리)로 보간
+  const thumbTransform = `translateY(${-28 * (1 - collapse)}px)`;
+
   return (
     <>
-      {/* 고정 헤더 래퍼 */}
+      {/* 고정 헤더 */}
       <div
-        id="app-header"
         data-app-header
         style={{
           position: 'fixed',
@@ -162,32 +157,26 @@ export default function StoreDetailPage() {
       </div>
 
       <S.Wrap>
-        {/* 히어로 */}
+        {/* 고정 배경(히어로) — 스크롤해도 배경은 그대로, 살짝 페이드/블러만 */}
         <S.Hero
-          ref={heroRef}
           style={{
-            height: `${HERO_MAX * (1 - collapse)}px`,
-            opacity: 1 - collapse * 0.9,
-            filter: `blur(${4 + collapse * 4}px)`,
+            backgroundImage: `url("${heroBg}")`,
+            opacity: 1 - collapse * 0.2, // 살짝 어둡게
+            filter: `blur(${2 + collapse * 2}px)`, // 살짝 더 블러
           }}
           role="img"
           aria-label="가게 대표 이미지"
         >
           <S.HeroOverlay />
-          <S.ShopThumb
-            src={
-              detail?.imageUrl ||
-              'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=480&q=80'
-            }
-            alt="가게 썸네일"
-          />
         </S.Hero>
 
-        {/* 상점 카드 */}
+        {/* 상점 카드 (스크롤 시 자연스럽게 위로 올라옴) */}
         <S.ShopCard>
+          {/* 카드 좌측 썸네일: 처음엔 카드 밖 위로 떠 있다가 collapse=1이면 자리로 */}
+          <S.ThumbInCard src={heroBg} alt="" style={{ transform: thumbTransform }} />
+
           <S.ShopContainer>
             <S.ChipRow>
-              {/* 스타일 파일에서 prop 경고가 있으면 tone -> $tone로 바꾸고 스타일도 맞춰줘 */}
               <S.Chip tone="muted">{detail?.marketLabel || '시장'}</S.Chip>
               {detail?.open && <S.Chip tone="success">● 영업중</S.Chip>}
             </S.ChipRow>
@@ -204,7 +193,7 @@ export default function StoreDetailPage() {
           </S.FavButton>
         </S.ShopCard>
 
-        {/* 오늘의 특가 */}
+        {/* 컨텐츠 */}
         {loading ? (
           <S.Section>
             <S.SectionHeader>

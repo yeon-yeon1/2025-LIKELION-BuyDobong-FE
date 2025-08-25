@@ -329,30 +329,14 @@ export const Pill = styled.button<{ $selected?: boolean; $big?: boolean }>`
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  border-radius: 9999px;
+  gap: 3px;
+  border-radius: 28px;
   border: 1.5px solid ${({ $selected }) => ($selected ? palette.brandPrimary : 'rgba(0,0,0,0.12)')};
   background: ${({ $selected }) => ($selected ? 'rgba(47,125,105,0.08)' : '#fff')};
   color: ${({ $selected }) => ($selected ? palette.brandPrimary : palette.textSecondary)};
   font-weight: 700;
   cursor: pointer;
-
   padding: ${({ $big }) => ($big ? '10px 18px' : '8px 14px')};
-  padding-left: ${({ $selected, $big }) =>
-    $selected ? ($big ? '38px' : '30px') : $big ? '18px' : '14px'};
-
-  &::before {
-    content: '';
-    display: ${({ $selected }) => ($selected ? 'block' : 'none')};
-    position: absolute;
-    left: ${({ $big }) => ($big ? '16px' : '12px')};
-    top: 50%;
-    transform: translateY(-50%);
-    width: ${({ $big }) => ($big ? '16px' : '14px')};
-    height: ${({ $big }) => ($big ? '16px' : '14px')};
-
-    background-image: url('@assets/GreenCheck.svg');
-  }
 `;
 
 export const SectionTitle = styled.div`

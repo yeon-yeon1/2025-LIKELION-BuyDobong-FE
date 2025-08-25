@@ -9,11 +9,9 @@ export const Wrap = styled.div`
   margin: 0 auto;
   background: var(--brand-background, #eef1ee);
   position: relative;
-  overflow-x: hidden;
 
-  //세로 스크롤 제어
+  /* 자체 스크롤일 때 */
   overflow-y: auto;
-  overflow-x: hidden;
   -ms-overflow-style: none;
   scrollbar-width: none;
   &::-webkit-scrollbar {
@@ -27,11 +25,12 @@ export const Hero = styled.div`
   position: sticky;
   top: 0;
   width: 100%;
-  background-image: url('https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1200&q=80');
+  height: ${220}px;
   background-size: cover;
   background-position: center;
-  transition: height 120ms ease, opacity 120ms ease, filter 120ms ease;
-  will-change: height, opacity, filter;
+  background-repeat: no-repeat;
+  transition: opacity 120ms ease, filter 120ms ease;
+  will-change: opacity, filter;
 `;
 
 export const HeroOverlay = styled.div`
@@ -40,30 +39,46 @@ export const HeroOverlay = styled.div`
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 60%);
 `;
 
-export const ShopThumb = styled.img`
+/* 히어로 위에 떠 있는 썸네일(처음 화면) */
+export const HeroThumb = styled.img`
   position: absolute;
-  left: 16px;
-  bottom: -28px;
+  left: 0px;
+  bottom: -50px;
   width: 72px;
   height: 72px;
   border-radius: 16px;
   object-fit: cover;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  transition: transform 160ms ease, opacity 160ms ease;
   z-index: 500;
+  transition: opacity 160ms ease, transform 160ms ease;
 `;
 
 export const ShopCard = styled.div`
   position: relative;
   margin: 12px 12px 0;
-  padding: 12px;
-  background: #ffffff;
+  padding: 12px 12px 12px;
+  background: #fff;
   border-radius: 18px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  transition: transform 160ms ease;
-  z-index: 2;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+
+  z-index: 2;
+`;
+
+export const ThumbInCard = styled.img`
+  position: absolute;
+  left: 0px;
+  top: -50px; /* 카드 윗부분 위로 28px 떠 있게 시작 */
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  will-change: transform;
+  transition: transform 180ms ease;
+  z-index: 5;
 `;
 
 export const ShopContainer = styled.div`

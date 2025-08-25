@@ -9,6 +9,8 @@ import * as K from '@styles/customer/KeywordSearchStyle';
 import SelectToggle, { type Select } from '@components/customer/SelectToggle';
 import StoreResults, { type Store } from '@components/customer/StoreResults';
 import ProductResults, { type ProductGroup } from '@components/customer/ProductResults';
+import GreenCheck from '@assets/GreenCheck.svg?react';
+import styled from 'styled-components';
 
 /* ===================== API 타입 ===================== */
 type ApiStore = {
@@ -51,7 +53,7 @@ const SORT_ITEMS: Array<{ value: SortKey; label: string }> = [
 const MARKET_LABEL_TO_KEY: Record<string, string> = {
   신도봉시장: 'SINDOBONG',
   창동골목시장: 'CHANGDONG',
-  방학동도깨비시장: 'BANGHAKDONG_DOKKEBI',
+  방학동도깨비시장: 'BANGHAKDONG',
   신창시장: 'SINCHANG',
   쌍문시장: 'SSANGMUN',
   백운시장: 'BAEGUN',
@@ -71,7 +73,7 @@ export default function KeywordSearch() {
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
-  // 🔸 인풋 포커스 상태 + ref (배지 숨길 때 포커스 복구에 사용)
+  // 인풋 포커스 상태 + ref (배지 숨길 때 포커스 복구에 사용)
   const [inputFocused, setInputFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<number | null>(null);
@@ -79,8 +81,8 @@ export default function KeywordSearch() {
   // 정렬/필터
   const [sort, setSort] = useState<SortKey>('nearest');
   const [filter, setFilter] = useState<{ dealsOnly: boolean; markets: string[] }>({
-    dealsOnly: false,
-    markets: [],
+    dealsOnly: false, // ← '전체'
+    markets: [], // ← '전체' (아무 것도 선택 안 함)
   });
   const isFilterActive = filter.dealsOnly || filter.markets.length > 0;
 
@@ -88,12 +90,11 @@ export default function KeywordSearch() {
   const [sortOpen, setSortOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortDraft, setSortDraft] = useState<SortKey>('nearest');
-  const [dealsOnlyDraft, setDealsOnlyDraft] = useState(false);
-  const [selectedMarketDraft, setSelectedMarketDraft] = useState<string | null>(null);
-
+  const [dealsOnlyDraft, setDealsOnlyDraft] = useState(false); // '전체'
+  const [selectedMarketDraft, setSelectedMarketDraft] = useState<string[]>([]); // '전체'
   const abortRef = useRef<AbortController | null>(null);
 
-  // URL ↔ 입력 동기화
+  // URL 입력 동기화
   useEffect(() => {
     setQ(urlQuery);
   }, [urlQuery]);
@@ -205,9 +206,16 @@ export default function KeywordSearch() {
   };
   const openFilter = () => {
     setDealsOnlyDraft(filter.dealsOnly);
-    setSelectedMarketDraft(filter.markets[0] ?? null);
+    setSelectedMarketDraft(filter.markets);
     setFilterOpen(true);
   };
+
+  const CheckIcon = styled(GreenCheck)`
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    display: inline-block;
+  `;
 
   // 언마운트 시 blur 타이머 정리
   useEffect(() => {
@@ -362,31 +370,45 @@ export default function KeywordSearch() {
             <K.ModalBody>
               <K.PillRow>
                 <K.Pill $big $selected={!dealsOnlyDraft} onClick={() => setDealsOnlyDraft(false)}>
+                  {!dealsOnlyDraft && <CheckIcon aria-hidden />}
                   전체
                 </K.Pill>
                 <K.Pill $big $selected={dealsOnlyDraft} onClick={() => setDealsOnlyDraft(true)}>
+                  {dealsOnlyDraft && <CheckIcon aria-hidden />}
                   특가만
                 </K.Pill>
               </K.PillRow>
 
               <K.SectionTitle>시장</K.SectionTitle>
               <K.PillRow>
+                {/* 전체 = 아무 것도 선택 안 된 상태 */}
                 <K.Pill
                   $big
-                  $selected={selectedMarketDraft === null}
-                  onClick={() => setSelectedMarketDraft(null)}
+                  $selected={selectedMarketDraft.length === 0}
+                  onClick={() => setSelectedMarketDraft([])} // ✅ 전체(초기화)
                 >
+                  {selectedMarketDraft.length === 0 && <CheckIcon aria-hidden />}
                   전체
                 </K.Pill>
-                {MARKET_OPTIONS.map((label) => (
-                  <K.Pill
-                    key={label}
-                    $selected={selectedMarketDraft === label}
-                    onClick={() => setSelectedMarketDraft(label)}
-                  >
-                    {label}
-                  </K.Pill>
-                ))}
+
+                {MARKET_OPTIONS.map((label) => {
+                  const isSelected = selectedMarketDraft.includes(label);
+                  return (
+                    <K.Pill
+                      key={label}
+                      $selected={isSelected}
+                      onClick={() =>
+                        setSelectedMarketDraft(
+                          (prev) =>
+                            isSelected ? prev.filter((l) => l !== label) : [...prev, label] // ✅ 토글
+                        )
+                      }
+                    >
+                      {isSelected && <CheckIcon aria-hidden />}
+                      {label}
+                    </K.Pill>
+                  );
+                })}
               </K.PillRow>
             </K.ModalBody>
 
@@ -396,7 +418,7 @@ export default function KeywordSearch() {
                 onClick={() => {
                   const next = {
                     dealsOnly: dealsOnlyDraft,
-                    markets: selectedMarketDraft ? [selectedMarketDraft] : [],
+                    markets: selectedMarketDraft,
                   };
                   setFilter(next);
                   setFilterOpen(false);
@@ -407,6 +429,7 @@ export default function KeywordSearch() {
                       : next.markets
                           .map((label) => MARKET_LABEL_TO_KEY[label] || '')
                           .filter(Boolean);
+
                   fetchSearch({
                     query: (searchParams.get('query') ?? '').trim(),
                     markets: marketKeys,

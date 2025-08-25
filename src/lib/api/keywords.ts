@@ -1,8 +1,6 @@
 // src/lib/api/keywords.ts
 import api from '@lib/api/api';
 
-const CONSUMER_ID = 2 as const; // 고정
-
 export type KeywordItem = {
   id: number;
   word: string;

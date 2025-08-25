@@ -25,6 +25,7 @@ function ProductRegister() {
   }, [defaultMode]);
   const [items, setItems] = useState<ProductItem[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // API -> UI 매핑
   type ApiProduct = {
@@ -98,6 +99,7 @@ function ProductRegister() {
 
   // 로컬스토리지에서 상품 목록 + 특가 맵 동시 로드 (items 내용이 동일해도 특가 즉시 반영)
   const loadProducts = async () => {
+    setLoading(true);
     try {
       const res = await api.get('/api/product/me', { validateStatus: () => true });
       console.log('[ProductRegister] fetch /api/product/me', res.status, res.data);
@@ -117,6 +119,8 @@ function ProductRegister() {
       console.error('[ProductRegister] fetch error', e);
       setItems([]);
       setSpecialsById({});
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -223,20 +227,26 @@ function ProductRegister() {
       <Header />
       <P.ProductRegister>
         <P.Title>지금 이런 걸 팔고 있어요</P.Title>
-        <ProductList
-          items={items}
-          expandedId={expandedId}
-          onRowClick={handleRowClick}
-          forwardMode={defaultMode}
-          onSpecial={handleSpecial}
-          onEdit={handleEdit}
-          onView={(id) => console.log('보기:', id)}
-          onDelete={handleDelete}
-          specialsById={specialsById}
-        />
-        <P.PlusButtonWrapper>
-          <PlusButton onClick={handleAddClick} />
-        </P.PlusButtonWrapper>
+        {loading ? (
+          <>불러오는 중...</>
+        ) : (
+          <>
+            <ProductList
+              items={items}
+              expandedId={expandedId}
+              onRowClick={handleRowClick}
+              forwardMode={defaultMode}
+              onSpecial={handleSpecial}
+              onEdit={handleEdit}
+              onView={(id) => console.log('보기:', id)}
+              onDelete={handleDelete}
+              specialsById={specialsById}
+            />
+            <P.PlusButtonWrapper>
+              <PlusButton onClick={handleAddClick} />
+            </P.PlusButtonWrapper>
+          </>
+        )}
       </P.ProductRegister>
     </>
   );

@@ -36,10 +36,30 @@ export default function Login() {
       });
       console.log('[login status]', status, data);
       if (status === 200 && data?.accessToken) {
-        sessionStorage.setItem('auth:token', data.accessToken);
+        const token: string = data.accessToken;
+
+        // ✅ 1) 토큰은 항상 같은 키에도 저장 (기존 코드들과의 호환)
+        // - 새 코드: 'accessToken' (auto-login에 따라 local/session)
+        // - 구 코드: 'auth:token' (일관성 위해 항상 세션에도 보관)
+        if (autoLogin) {
+          localStorage.setItem('accessToken', token);
+          sessionStorage.removeItem('accessToken');
+        } else {
+          sessionStorage.setItem('accessToken', token);
+          localStorage.removeItem('accessToken');
+        }
+        // 구 키와의 호환성 유지(merchant/consumer 어디서든 동일하게 읽히도록)
+        sessionStorage.setItem('auth:token', token);
+
+        // ✅ 2) 즉시 axios 기본 헤더에도 반영
+        axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+
+        // ✅ 3) 역할 저장(기존 키 유지)
         if (data.role) {
           sessionStorage.setItem('auth:role', data.role);
         }
+
+        // ✅ 4) 라우팅
         if (data.role === 'MERCHANT') {
           navigate('/merchantHome', { replace: true });
         } else if (data.role === 'CONSUMER') {

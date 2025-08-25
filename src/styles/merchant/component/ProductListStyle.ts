@@ -246,6 +246,12 @@ export const RowWrap = styled.div<{ $expanded?: boolean; $hidden?: boolean; $isS
   padding: ${({ $isSpecial }) => ($isSpecial ? '3px 11px 8px 13px' : '')};
   box-shadow: ${({ $expanded }) => ($expanded ? '0 0 4px 0 rgba(0,0,0,0.10)' : 'none')};
   margin: ${({ $expanded }) => ($expanded ? '0 9px 0 12px' : '0 7px 0 11px')};
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 `;
 
 // 모달

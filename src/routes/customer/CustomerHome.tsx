@@ -12,7 +12,6 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  // Do not add Authorization header to /api/consumer/vapid requests
   if (!config.url?.includes('/api/consumer/vapid')) {
     const token =
       localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || '';
@@ -36,7 +35,7 @@ async function getPushStatus(): Promise<{ pushEnabled: boolean } | null> {
   }
 }
 
-// 수정d
+// 수정
 async function patchPushEnabled(enabled: boolean): Promise<boolean> {
   try {
     const res = await api.patch('/api/consumer/push', { pushEnabled: enabled });
@@ -59,7 +58,6 @@ async function upsertSubscriptionToServer(sub: PushSubscription): Promise<boolea
     const p256dh = j?.keys?.p256dh as string | undefined;
     const auth = j?.keys?.auth as string | undefined;
 
-    // 서버 스펙: { endpoint, p256dh, auth } 만 허용됨. (여분 필드 금지)
     if (!endpoint || !p256dh || !auth) {
       console.warn('[push] invalid subscription payload', {
         endpoint,
@@ -72,7 +70,6 @@ async function upsertSubscriptionToServer(sub: PushSubscription): Promise<boolea
     const payload = { endpoint, p256dh, auth };
     console.log('[push] upsert payload(strict) →', payload);
 
-    // 정확히 2xx 만 성공 처리
     const res = await api.post('/api/consumer/subscription', payload, {
       validateStatus: () => true,
     });
@@ -86,11 +83,9 @@ async function upsertSubscriptionToServer(sub: PushSubscription): Promise<boolea
   }
 }
 
-// 서버에서 VAPID 공개키 조회
 async function getVapidPublicKey(): Promise<string | null> {
   try {
     const { data } = await api.get('/api/consumer/vapid');
-    // 서버가 문자열 혹은 { publicKey } 형태 중 하나로 줄 수 있으니 모두 대응
     const key = (typeof data === 'string' ? data : data?.publicKey ?? data?.vapid ?? data?.key) as
       | string
       | undefined;
@@ -134,12 +129,12 @@ function CustomerHome() {
           if (alive) setNotify(false);
           return;
         }
-        const perm = Notification.permission; // 'granted' | 'denied' | 'default'
+        const perm = Notification.permission; 
         const reg = await navigator.serviceWorker.getRegistration();
         const sub = reg ? await reg.pushManager.getSubscription() : null;
         const server = await getPushStatus();
-        const serverOn = !!server?.pushEnabled; // 서버 설정
-        const clientOn = perm === 'granted' && !!sub; // 클라이언트(권한+구독)
+        const serverOn = !!server?.pushEnabled;
+        const clientOn = perm === 'granted' && !!sub; 
         const shouldOn = serverOn && clientOn;
         if (alive) setNotify(shouldOn);
       } catch {

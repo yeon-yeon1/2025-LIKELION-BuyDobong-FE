@@ -14,7 +14,7 @@ export const SmallSpace = styled.div`
 `;
 
 export const MarketCardWrapper = styled.div`
-  cursor: 'pointer';
+  cursor: pointer;
 `;
 
 export const ProductRegistCardWrapper = styled.div`
@@ -213,4 +213,16 @@ export const RadioDot = styled.span<{ $checked: boolean }>`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+`;
+
+export const ModalBtn = styled.button`
+  width: 100%;
+  padding: 20px;
+  border-radius: 18px;
+  border: none;
+  background: ${palette.highlightRed20};
+  color: ${palette.highlightRed};
+  font-weight: 400;
+  font-size: 16px;
+  cursor: pointer;
 `;

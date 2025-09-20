@@ -5,6 +5,7 @@ import Header from '@components/Header';
 import EmptyStoreCard from '@components/merchant/EmptyStoreCard';
 import MarketCard from '@components/merchant/MarketCard';
 import * as M from '@styles/merchant/MerchantHomeStyle';
+import Modal from '@components/Modal';
 
 import BusinessStatusToggle, {
   type BusinessStatus,
@@ -116,6 +117,7 @@ function MerchantHome() {
     const saved = localStorage.getItem('registerMode:default');
     return saved === 'text' ? 'text' : 'voice';
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [changeLog, setChangeLog] = useState<ChangeEntry[]>(() => {
     try {
@@ -691,7 +693,6 @@ function MerchantHome() {
                     value="voice"
                     checked={registerMode === 'voice'}
                     onChange={() => setRegisterMode('voice')}
-                    style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
                   />
                   <M.RadioCircle $checked={registerMode === 'voice'}>
                     <M.RadioDot $checked={registerMode === 'voice'} />
@@ -712,7 +713,6 @@ function MerchantHome() {
                     value="text"
                     checked={registerMode === 'text'}
                     onChange={() => setRegisterMode('text')}
-                    style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
                   />
                   <M.RadioCircle $checked={registerMode === 'text'}>
                     <M.RadioDot $checked={registerMode === 'text'} />
@@ -724,6 +724,43 @@ function MerchantHome() {
                 </M.RadioLabel>
               </M.ModeRow>
             </M.ProductRegistCardWrapper>
+
+            <M.SmallSpace />
+
+            <M.ModalBtn type="button" onClick={() => setShowDeleteModal(true)}>
+              상점 삭제
+            </M.ModalBtn>
+
+            {/* 로그인 모달 예시 */}
+            {/* <Modal
+              open={showDeleteModal}
+              onClose={() => setShowDeleteModal(false)}
+              onConfirm={() => setShowDeleteModal(false)}
+              title="로그아웃"
+              description={<>현재 로그인된 계정에서 로그아웃돼요.</>}
+              cancelText="취소"
+              confirmText="로그아웃"
+            /> */}
+
+            <Modal
+              open={showDeleteModal}
+              onClose={() => setShowDeleteModal(false)}
+              onConfirm={() => setShowDeleteModal(false)}
+              title="상점 삭제"
+              description={
+                <>
+                  상점을 삭제하면 등록된
+                  <span>
+                    모든 상품 데이터가 <br />
+                    즉시 삭제
+                  </span>
+                  되며, <span>복구할 수 없어요.</span>
+                </>
+              }
+              cancelText="취소"
+              variant="danger"
+              confirmText="상점 삭제"
+            />
           </>
         )}
       </M.MerchantHome>

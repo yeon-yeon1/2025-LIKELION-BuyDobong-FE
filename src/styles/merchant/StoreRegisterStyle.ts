@@ -74,6 +74,7 @@ export const Row = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-direction: column;
 `;
 
 export const PickBtn = styled.button`
@@ -137,3 +138,60 @@ export const Bottom = styled.div`
 
 export const Map = styled.div``;
 export const ImgInput = styled.input``;
+
+export const ImageBox = styled.button<{ $hasPreview?: boolean }>`
+  width: 90px;
+  height: 90px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+  margin: 8px 0 12px;
+  cursor: pointer;
+  padding: 0;
+
+  border: ${({ $hasPreview }) => ($hasPreview ? 'none' : '2px dashed #bcd1c7')};
+  background: ${({ $hasPreview }) => ($hasPreview ? '#fff' : 'transparent')};
+
+  svg {
+    width: 80px;
+    height: 80px;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+    display: block;
+  }
+`;
+
+export const RemoveBtn = styled.button`
+  position: absolute;
+  top: 4px;
+  right: -5px;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  padding: 0;
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  background: rgba(0, 0, 0, 0.2);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+
+  svg {
+    width: 8px;
+    height: 8px;
+  }
+`;
+
+export const BtnWrapper = styled.div`
+  position: relative;
+`;

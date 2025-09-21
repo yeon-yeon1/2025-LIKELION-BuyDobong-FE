@@ -1,21 +1,20 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+import api from '@lib/api';
 import Header from '@components/Header';
 import * as S from '@styles/merchant/StoreRegisterStyle';
-
 import MarketPosition, { type MarketOption } from '@components/merchant/MarketPosition';
 import MarketCard from '@components/merchant/MarketCard';
 import PreviewPanel from '@components/merchant/PreviewPanel';
 
 import PlusIcon from '@assets/BlackPlus.svg?react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import api from '../../lib/api';
+import MarketImg from '@assets/MarketImg.svg?react';
+import BlurClose from '@assets/BlurClose.svg?react';
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-// NOTE: 서버가 문자열 URL 또는 { url: string } / { imageUrl: string } 형태로 응답할 수 있음
-
-// 안전한 ASCII 파일명으로 변환 (확장자는 유지)
 const MARKET_CODE_MAP: Record<string, string> = {
   CHANDONG: 'CHANGDONG',
 };
@@ -405,6 +404,15 @@ function StoreRegister() {
 
   const canPreview = storeName.trim().length > 0 && !!market;
 
+  const hasPreview = !!(previewUrl ?? imageUrl);
+
+  const onClearImage = () => {
+    setPreviewUrl(null);
+    setImageUrl(null);
+    setImageFile(null);
+    setErr('');
+  };
+
   return (
     <>
       <Header />
@@ -438,14 +446,40 @@ function StoreRegister() {
         </S.MapBox>
 
         {/* 대표 사진 */}
+        <S.LabelWrapper>
+          <S.Label>대표 사진</S.Label>
+          <S.SubLabel>선택</S.SubLabel>
+        </S.LabelWrapper>
         <S.Row>
-          <S.LabelWrapper>
-            <S.Label>대표 사진</S.Label>
-            <S.SubLabel>선택</S.SubLabel>
-          </S.LabelWrapper>
+          {hasPreview ? (
+            <>
+              <S.BtnWrapper>
+                <S.ImageBox type="button" onClick={onPickImage} $hasPreview={hasPreview}>
+                  <img src={previewUrl ?? (imageUrl as string)} alt="대표 사진 미리보기" />
+                </S.ImageBox>
+                <S.RemoveBtn
+                  type="button"
+                  aria-label="이미지 삭제"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClearImage();
+                  }}
+                >
+                  <BlurClose />
+                </S.RemoveBtn>
+              </S.BtnWrapper>
+            </>
+          ) : (
+            <S.ImageBox type="button" onClick={onPickImage} $hasPreview={hasPreview}>
+              <MarketImg />
+            </S.ImageBox>
+          )}
+          {/* </S.ImageBox> */}
+
           <S.PickBtn type="button" onClick={onPickImage}>
             <PlusIcon /> 사진 추가하기
           </S.PickBtn>
+
           <S.ImgInput
             ref={fileRef}
             type="file"

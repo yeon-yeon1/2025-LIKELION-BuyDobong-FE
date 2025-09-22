@@ -504,6 +504,41 @@ function MerchantHome() {
     }
   };
 
+  const handleDeleteStore = async () => {
+    try {
+      dbg('request delete store');
+      const res = await api.delete('/api/store/me', { validateStatus: () => true });
+      dbg('delete result', res.status, res.data);
+
+      if (res.status === 200 || res.status === 204) {
+        setShowDeleteModal(false);
+        // 로컬 상태 및 관련 캐시 정리
+        setStores([]);
+        setFetchErr('');
+        try {
+          localStorage.removeItem('merchantHome:productSnapshot');
+          localStorage.removeItem('merchantHome:changeLog');
+          localStorage.removeItem('product:specials');
+        } catch {}
+        // 삭제 후에는 빈 화면(EmptyStoreCard)이 보이도록 현재 페이지 유지
+        // 필요 시 다음 라인을 사용해 등록 화면으로 보낼 수 있습니다.
+        // navigate('/storeRegister', { replace: true });
+      } else if (res.status === 401) {
+        setShowDeleteModal(false);
+        navigate('/login', { replace: true });
+      } else {
+        const msg =
+          typeof res.data === 'string'
+            ? res.data
+            : res.data?.message || '상점 삭제에 실패했습니다.';
+        setFetchErr(msg);
+      }
+    } catch (e) {
+      dbg('delete store error', e);
+      setFetchErr('네트워크 오류로 상점을 삭제하지 못했습니다.');
+    }
+  };
+
   return (
     <>
       <Header />
@@ -745,7 +780,7 @@ function MerchantHome() {
             <Modal
               open={showDeleteModal}
               onClose={() => setShowDeleteModal(false)}
-              onConfirm={() => setShowDeleteModal(false)}
+              onConfirm={handleDeleteStore}
               title="상점 삭제"
               description={
                 <>

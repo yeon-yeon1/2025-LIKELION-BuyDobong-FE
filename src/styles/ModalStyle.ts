@@ -19,12 +19,14 @@ export const Overlay = styled.div`
   margin: 0 auto;
   @media (hover: none) and (pointer: coarse) {
     width: 100%;
+    height: 100vh;
     margin: 0 auto;
 
     @media (min-width: 768px) {
       body {
         width: 390px;
         margin: 0 auto;
+        height: 100vh;
       }
     }
   }

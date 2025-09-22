@@ -34,6 +34,30 @@ function StoreRegister() {
   }, []);
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState('');
+  const [existingStoreId, setExistingStoreId] = useState<number | null>(null);
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const token =
+          (typeof window !== 'undefined' &&
+            (sessionStorage.getItem('auth:token') || localStorage.getItem('accessToken'))) ||
+          '';
+        const res = await api.get('/api/store/me', {
+          validateStatus: () => true,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        if (!ignore && res.status === 200 && typeof res.data?.id === 'number') {
+          setExistingStoreId(res.data.id);
+        }
+      } catch (_) {
+        // ignore
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, []);
   const [storeName, setStoreName] = useState('');
   const [market, setMarket] = useState<MarketOption | null>(null);
   const marketStateRef = useRef<MarketOption | null>(null);
@@ -406,11 +430,42 @@ function StoreRegister() {
 
   const hasPreview = !!(previewUrl ?? imageUrl);
 
-  const onClearImage = () => {
+  const onClearImage = async () => {
+    setErr('');
+
+    if (existingStoreId && imageUrl && !imageFile) {
+      try {
+        const token =
+          (typeof window !== 'undefined' &&
+            (sessionStorage.getItem('auth:token') || localStorage.getItem('accessToken'))) ||
+          '';
+        const res = await api.delete('/api/store/me/image', {
+          validateStatus: () => true,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+
+        if (res.status === 200 || res.status === 204) {
+          setPreviewUrl(null);
+          setImageUrl(null);
+          setImageFile(null);
+          return;
+        }
+        const msg =
+          typeof res.data === 'string'
+            ? res.data
+            : res.data?.message || '대표 사진 삭제에 실패했습니다.';
+        setErr(msg);
+        return;
+      } catch (e) {
+        console.log(e);
+        return;
+      }
+    }
+
+    // 신규 등록(POST) 중이거나, 이미 새 파일을 골라둔 상태면 로컬 상태만 초기화
     setPreviewUrl(null);
     setImageUrl(null);
     setImageFile(null);
-    setErr('');
   };
 
   return (

@@ -24,3 +24,4 @@ dist-ssr
 .env
 *.sw?
 /2025-LIKELION-BuyDobong-FE
+.vercel

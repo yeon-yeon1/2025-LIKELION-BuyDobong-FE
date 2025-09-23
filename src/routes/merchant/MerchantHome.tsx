@@ -558,9 +558,7 @@ function MerchantHome() {
               onChange={handleToggle}
               labels={{ open: '영업중', closed: '영업종료' }}
             />
-            {toggling && (
-              <div style={{ fontSize: 12, color: '#888', paddingTop: 4 }}>상태를 업데이트 중…</div>
-            )}
+
             <M.Space />
             <M.MarketCardWrapper
               onClick={() =>

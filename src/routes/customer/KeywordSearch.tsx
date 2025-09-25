@@ -7,6 +7,7 @@ import Header from '@components/Header';
 import InterestNudge from '@components/customer/InterestNudge';
 import PopularKeywords from '@components/customer/PopularKeywords';
 import NearbyStores, { type NearbyStore } from '@components/customer/NearbyStores';
+import FloatingButtons from '@components/FloatingButtons';
 import { getRandomStores } from '@lib/api/random';
 import * as K from '@styles/customer/KeywordSearchStyle';
 import SelectToggle, { type Select } from '@components/customer/SelectToggle';
@@ -67,6 +68,10 @@ export default function KeywordSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = (searchParams.get('query') ?? '').trim();
   const navigate = useNavigate();
+
+  // 사용자 로그인 상태 및 역할 확인
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<'MERCHANT' | 'CUSTOMER' | null>(null);
 
   const [q, setQ] = useState(urlQuery);
   const [mode, setMode] = useState<Select>('store');
@@ -285,6 +290,32 @@ export default function KeywordSearch() {
     flex: 0 0 auto;
     display: inline-block;
   `;
+
+  // 로그인 상태 및 역할 확인
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const token = sessionStorage.getItem('auth:token') || localStorage.getItem('accessToken');
+      if (token) {
+        try {
+          // 토큰이 있으면 서버에 검증 요청
+          const response = await api.get('/api/auth/me');
+          setIsLoggedIn(true);
+          setUserRole(response.data.role);
+        } catch (error) {
+          // 토큰이 유효하지 않으면 로그아웃 처리
+          setIsLoggedIn(false);
+          setUserRole(null);
+          sessionStorage.removeItem('auth:token');
+          localStorage.removeItem('accessToken');
+        }
+      } else {
+        setIsLoggedIn(false);
+        setUserRole(null);
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
 
   // 페이지 로드 시 랜덤 상점 가져오기
   useEffect(() => {
@@ -539,6 +570,9 @@ export default function KeywordSearch() {
           </K.Backdrop>
         )}
       </K.Container>
+
+      {/* 플로팅 버튼들 */}
+      <FloatingButtons userRole={userRole} isLoggedIn={isLoggedIn} />
     </>
   );
 }

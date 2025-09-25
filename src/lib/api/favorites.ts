@@ -1,7 +1,7 @@
 // src/lib/api/favorites.ts
 import api from '@lib/api/api';
 
-export const FAVORITES_BASE = `/api/consumer/favorite`;
+export const FAVORITES_BASE = `/api/favorite`;
 
 export type FavStore = {
   id: number;

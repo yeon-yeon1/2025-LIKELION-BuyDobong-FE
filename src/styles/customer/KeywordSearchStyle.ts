@@ -11,6 +11,12 @@ export const Thumb = styled.img<{ small?: boolean }>`
   object-fit: cover;
 `;
 
+export const Container = styled.div`
+  padding: 68px 16px 32px; /* 헤더 높이(56px) + 여백(12px) */
+  max-width: 350px;
+  margin: 0 auto;
+`;
+
 /* ---------------- 상품 모드 ---------------- */
 export const PCard = styled.div`
   padding: 12px;
@@ -96,10 +102,10 @@ export const DownIcon = styled.span`
 
 /* ------ 기존 것 (참고, 없으면 추가) ------ */
 export const KeywordSearch = styled.main`
-  padding: 12px 16px 32px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-height: 100vh;
 `;
 
 export const SearchForm = styled.form`
@@ -107,10 +113,8 @@ export const SearchForm = styled.form`
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  border-radius: 18px;
+  border-radius: 50px;
   background: ${palette.card};
-  border: 1px solid ${palette.brandPrimary};
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 `;
 export const SearchInput = styled.input`
   flex: 1;

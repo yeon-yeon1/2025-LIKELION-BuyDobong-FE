@@ -2,6 +2,7 @@ const palette = {
   card: '#FFFFFF',
   brandBackground: '#EEF1EE',
   brandPrimary: '#2F7D69',
+  brandPrimary10: 'rgba(47, 125, 105, 0.10)',
   brandPrimary20: 'rgba(98, 161, 147, 0.2)',
   brandPrimary30: 'rgba(98, 161, 147, 0.3)',
   textPrimary: '#2C2C2C',

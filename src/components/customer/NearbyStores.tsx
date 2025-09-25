@@ -1,0 +1,221 @@
+import React from 'react';
+import styled from 'styled-components';
+import palette from '@lib/colorPalette';
+
+const Container = styled.div`
+  margin: 18px 0;
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 600;
+  color: ${palette.textPrimary};
+  margin: 0;
+`;
+
+const RefreshButton = styled.button`
+  background: none;
+  border: none;
+  color: ${palette.textSecondary};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${palette.brandPrimary10};
+    color: ${palette.brandPrimary};
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+const StoresContainer = styled.div`
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px 0;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+`;
+
+const StoreWrapper = styled.div`
+  flex-shrink: 0;
+  width: 125px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: all 0.2s ease;
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const ImageCard = styled.div`
+  width: 125px;
+  aspect-ratio: 1;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  cursor: pointer;
+`;
+
+const StoreImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: ${palette.brandPrimary10};
+`;
+
+const InfoCardWrapper = styled.div`
+  position: relative;
+`;
+
+const InfoCard = styled.div`
+  border-radius: 12px;
+  padding: 12px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+`;
+
+const StoreName = styled.div`
+  font-size: 16px;
+  font-weight: 700;
+  color: ${palette.textPrimary};
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+`;
+
+const StoreMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 3px;
+`;
+
+const MarketName = styled.span`
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 16px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  color: ${palette.textPrimary};
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 80px;
+`;
+
+const StatusChip = styled.span<{ $open: boolean }>`
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 16px;
+  background: ${(props) => (props.$open ? palette.brandPrimary20 : '#f5f5f5')};
+  color: ${(props) => (props.$open ? palette.brandPrimary : palette.textSecondary)};
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 500;
+  white-space: nowrap;
+`;
+
+const StatusDot = styled.span<{ $open: boolean }>`
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: ${(props) => (props.$open ? palette.brandPrimary : '#ccc')};
+`;
+
+const RightArrow = styled.svg`
+  width: 16px;
+  height: 16px;
+  color: ${palette.textSecondary};
+`;
+
+export interface NearbyStore {
+  id: number;
+  name: string;
+  market: string;
+  imageUrl: string;
+  open: boolean;
+}
+
+interface NearbyStoresProps {
+  stores: NearbyStore[];
+  onStoreClick: (store: NearbyStore) => void;
+  onRefresh?: () => void;
+}
+
+export default function NearbyStores({ stores, onStoreClick, onRefresh }: NearbyStoresProps) {
+  return (
+    <Container>
+      <SectionHeader>
+        <SectionTitle>우리 동네 상점 둘러보기</SectionTitle>
+        {onRefresh && (
+          <RefreshButton onClick={onRefresh} aria-label="새로고침">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+            </svg>
+          </RefreshButton>
+        )}
+      </SectionHeader>
+      <StoresContainer>
+        {stores.map((store) => (
+          <StoreWrapper key={store.id}>
+            <ImageCard onClick={() => onStoreClick(store)}>
+              <StoreImage
+                src={
+                  store.imageUrl ||
+                  'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=256&q=80'
+                }
+                alt={store.name}
+                loading="lazy"
+              />
+            </ImageCard>
+            <InfoCardWrapper>
+              <InfoCard onClick={() => onStoreClick(store)}>
+                <StoreName>
+                  {store.name}
+                  <RightArrow viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6l6 6-6 6-1.41-1.41z" />
+                  </RightArrow>
+                </StoreName>
+                <StoreMeta>
+                  <MarketName>{store.market}</MarketName>
+                  <StatusChip $open={store.open}>
+                    <StatusDot $open={store.open} />
+                    {store.open ? '영업중' : '영업 종료'}
+                  </StatusChip>
+                </StoreMeta>
+              </InfoCard>
+            </InfoCardWrapper>
+          </StoreWrapper>
+        ))}
+      </StoresContainer>
+    </Container>
+  );
+}

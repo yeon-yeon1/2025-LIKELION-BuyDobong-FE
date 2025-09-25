@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@components/Header';
 import * as L from '@styles/LoginStyle';
 import EyeOpen from '@assets/EyeOpen.svg?react';
@@ -19,10 +19,38 @@ export default function Login() {
     baseURL: 'https://n0t4u.shop',
     headers: { 'Content-Type': 'application/json', Accept: '*/*' },
   });
+
+  // 로그인 페이지 진입 시 axios 인스턴스 헤더 정리
+  useEffect(() => {
+    // 로컬 axios 인스턴스 헤더 정리
+    delete api.defaults.headers.common.Authorization;
+    // 전역 axios 헤더도 정리
+    delete axios.defaults.headers.common.Authorization;
+  }, []);
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState('');
 
   const canSubmit = phone.trim() !== '' && pw.trim() !== '';
+
+  // 로그인 상태 확인 - 이미 로그인되어 있으면 해당 홈으로 리다이렉트
+  useEffect(() => {
+    const token =
+      sessionStorage.getItem('auth:token') ||
+      localStorage.getItem('accessToken') ||
+      sessionStorage.getItem('accessToken');
+    const role = sessionStorage.getItem('auth:role') as 'MERCHANT' | 'CUSTOMER' | null;
+
+    if (token && role) {
+      if (role === 'MERCHANT') {
+        navigate('/merchantHome', { replace: true });
+      } else if (role === 'CUSTOMER') {
+        navigate('/customerHome', { replace: true });
+      }
+    } else {
+      // 토큰이 없으면 axios 기본 헤더 정리
+      delete axios.defaults.headers.common.Authorization;
+    }
+  }, [navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -12,7 +12,7 @@ export const Page = styled.main`
 `;
 
 export const PageWithHeader = styled.main`
-  padding: 68px 16px 32px; /* 헤더 높이(56px) + 여백(12px) + 하단버튼 높이(80px) + 여백(40px) */
+  padding: 68px 16px 32px; /* 헤더 높이(56px) + 여백(12px) + 하단 여백(32px) */
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -182,12 +182,12 @@ export const Empty = styled.div`
   align-items: center;
   gap: 10px;
   color: ${palette.textSecondary};
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 400;
 `;
 export const EmptyIcon = styled.span`
-  width: 28px;
-  height: 28px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #8a8f91;
   color: #fff;
@@ -317,16 +317,10 @@ export const PlaceholderInfo = styled.div`
   gap: 8px;
 `;
 
-/* 하단 고정 컨테이너 */
-export const FixedBottomContainer = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 350px;
-  z-index: 1000;
-  background-color: transparent;
+/* 하단 섹션 */
+export const BottomSection = styled.div`
+  margin-top: 32px;
+  padding: 0 16px;
 `;
 
 /* 하단 버튼들 */
@@ -363,23 +357,23 @@ export const StartButton = styled.button`
 export const LogoutButton = styled.button`
   flex: 1;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 18px;
   background: ${palette.brandPrimary20};
   border: 0;
-  color: ${palette.textPrimary};
+  color: ${palette.brandPrimary};
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
 `;
 
 export const WithdrawButton = styled.button`
   flex: 1;
   padding: 16px;
-  border-radius: 12px;
-  background: #ff6b6b;
+  border-radius: 18px;
+  background: ${palette.highlightRed20};
   border: 0;
-  color: white;
+  color: ${palette.highlightRed};
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
 `;

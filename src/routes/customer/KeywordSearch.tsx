@@ -4,6 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import api from '@lib/api/api';
 import Header from '@components/Header';
+import Modal from '@components/Modal';
 import InterestNudge from '@components/customer/InterestNudge';
 import PopularKeywords from '@components/customer/PopularKeywords';
 import NearbyStores, { type NearbyStore } from '@components/customer/NearbyStores';
@@ -73,6 +74,7 @@ export default function KeywordSearch() {
   // 사용자 로그인 상태 및 역할 확인
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<'MERCHANT' | 'CUSTOMER' | null>(null);
+  const [loginRequiredModalOpen, setLoginRequiredModalOpen] = useState(false);
 
   const [q, setQ] = useState(urlQuery);
   const [mode, setMode] = useState<Select>('store');
@@ -274,6 +276,11 @@ export default function KeywordSearch() {
     }
   };
 
+  // 로그인 필요한 기능 시도 시 호출
+  const handleLoginRequired = () => {
+    setLoginRequiredModalOpen(true);
+  };
+
   const CheckIcon = styled(GreenCheck)`
     width: 16px;
     height: 16px;
@@ -452,6 +459,8 @@ export default function KeywordSearch() {
             show={inputFocused && q.trim().length > 0}
             keyword={q}
             restoreFocusTo={() => inputRef.current}
+            isLoggedIn={isLoggedIn}
+            onLoginRequired={handleLoginRequired}
           />
         </K.KeywordSearch>
 
@@ -574,6 +583,25 @@ export default function KeywordSearch() {
 
       {/* 플로팅 버튼들 */}
       <FloatingButtons userRole={userRole} isLoggedIn={isLoggedIn} />
+
+      {/* 로그인 안내 모달 */}
+      <Modal
+        open={loginRequiredModalOpen}
+        title="회원 기능"
+        description="로그인 후 이용 가능한 페이지예요"
+        cancelText="로그인"
+        confirmText="시작하기"
+        onClose={() => {
+          setLoginRequiredModalOpen(false);
+          navigate('/login');
+        }}
+        onConfirm={() => {
+          setLoginRequiredModalOpen(false);
+          navigate('/signup');
+        }}
+        variant="primary"
+        width={320}
+      />
     </>
   );
 }

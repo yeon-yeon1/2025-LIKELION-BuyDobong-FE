@@ -130,6 +130,7 @@ function Signup() {
     e.preventDefault();
     if (!canSubmit || !verifiedPhoneToken) return;
     const partial = {
+      phone: phone.trim(),
       verifiedPhoneToken,
       password: pw,
       passwordConfirm: pw2,

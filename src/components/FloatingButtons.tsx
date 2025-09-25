@@ -48,15 +48,11 @@ export default function FloatingButtons({ userRole, isLoggedIn }: FloatingButton
   const navigate = useNavigate();
 
   const handleHomeClick = () => {
-    if (isLoggedIn && userRole === 'MERCHANT') {
-      navigate('/merchantHome');
-    } else {
-      navigate('/customerHome');
-    }
+    navigate('/customerHome');
   };
 
   const handleStoreClick = () => {
-    navigate('/storeRegister');
+    navigate('/merchantHome');
   };
 
   return (

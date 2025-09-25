@@ -1,9 +1,11 @@
 // src/pages/customer/CustomerHome.tsx (MyPage)
 import React, { useEffect, useState, useCallback } from 'react';
 import Header from '@components/Header';
+import Modal from '@components/Modal';
 import { listKeywords, deleteKeyword } from '@lib/api/keywords';
 import { listFavoriteStores, unfavoriteStore, type FavStore } from '@lib/api/favorites';
 import { listRecentStores, removeRecentStore, type RecentStore } from '@lib/api/recent';
+import { logout, withdraw } from '@lib/api/auth';
 import * as I from '@styles/customer/InterestMarketStyle';
 import DeleteBtn from '@assets/deleteButton.svg?react';
 import WarningIcon from '@assets/WarningIcon.svg?react';
@@ -136,6 +138,11 @@ export default function CustomerHome() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
 
+  /* ---------- 모달 상태 ---------- */
+  const [logoutModalOpen, setLogoutModalOpen] = useState<boolean>(false);
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState<boolean>(false);
+  const [loginRequiredModalOpen, setLoginRequiredModalOpen] = useState<boolean>(false);
+
   /* ---------- 상세 상점 이동 ---------- */
   const navigate = useNavigate();
 
@@ -194,23 +201,65 @@ export default function CustomerHome() {
     };
   }, [isLoggedIn]);
 
-  // 로그아웃 함수
+  // 로그아웃 모달 열기
   const handleLogout = () => {
+    setLogoutModalOpen(true);
+  };
+
+  // 실제 로그아웃 처리
+  const confirmLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('로그아웃 API 호출 실패:', error);
+      // API 호출이 실패해도 로컬 로그아웃은 진행
+    }
+
+    // 로컬 스토리지 정리
     localStorage.removeItem('accessToken');
     sessionStorage.removeItem('accessToken');
     sessionStorage.removeItem('auth:token');
     sessionStorage.removeItem('auth:role');
+
+    // axios 기본 헤더도 정리
+    delete axios.defaults.headers.common.Authorization;
+
     setIsLoggedIn(false);
-    navigate('/login');
+    setLogoutModalOpen(false);
+    navigate('/login', { replace: true });
   };
 
-  // 회원 탈퇴 함수 (추후 구현 필요)
+  // 회원 탈퇴 모달 열기
   const handleWithdraw = () => {
-    if (confirm('정말로 회원탈퇴를 하시겠습니까?')) {
-      // TODO: 회원탈퇴 API 호출
-      console.log('회원탈퇴 처리');
-      handleLogout();
+    setWithdrawModalOpen(true);
+  };
+
+  // 실제 회원 탈퇴 처리
+  const confirmWithdraw = async () => {
+    try {
+      await withdraw();
+    } catch (error) {
+      console.error('회원탈퇴 API 호출 실패:', error);
+      // API 호출이 실패해도 로컬 로그아웃은 진행
     }
+
+    // 로컬 스토리지 정리
+    localStorage.removeItem('accessToken');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('auth:token');
+    sessionStorage.removeItem('auth:role');
+
+    // axios 기본 헤더도 정리
+    delete axios.defaults.headers.common.Authorization;
+
+    setIsLoggedIn(false);
+    setWithdrawModalOpen(false);
+    navigate('/', { replace: true });
+  };
+
+  // 로그인 필요한 기능 시도 시 호출
+  const handleLoginRequired = () => {
+    setLoginRequiredModalOpen(true);
   };
 
   /* ---------- 관심 키워드 ---------- */
@@ -437,9 +486,11 @@ export default function CustomerHome() {
           <I.Section>
             <I.SectionHead>
               <I.SectionTitle>관심 키워드</I.SectionTitle>
-              <I.EditBtn type="button">편집</I.EditBtn>
+              <I.EditBtn type="button" onClick={handleLoginRequired}>
+                편집
+              </I.EditBtn>
             </I.SectionHead>
-            <I.PlaceholderCard>
+            <I.PlaceholderCard onClick={handleLoginRequired}>
               <I.PlaceholderBar />
               <I.SearchIcon aria-hidden viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -452,9 +503,11 @@ export default function CustomerHome() {
           <I.Section>
             <I.SectionHead>
               <I.SectionTitle>관심 상점</I.SectionTitle>
-              <I.EditBtn type="button">편집</I.EditBtn>
+              <I.EditBtn type="button" onClick={handleLoginRequired}>
+                편집
+              </I.EditBtn>
             </I.SectionHead>
-            <I.PlaceholderStoreCard>
+            <I.PlaceholderStoreCard onClick={handleLoginRequired}>
               <I.PlaceholderImage />
               <I.PlaceholderInfo>
                 <I.PlaceholderBar />
@@ -468,9 +521,11 @@ export default function CustomerHome() {
           <I.Section>
             <I.SectionHead>
               <I.SectionTitle>최근 본 상점</I.SectionTitle>
-              <I.EditBtn type="button">편집</I.EditBtn>
+              <I.EditBtn type="button" onClick={handleLoginRequired}>
+                편집
+              </I.EditBtn>
             </I.SectionHead>
-            <I.PlaceholderStoreCard>
+            <I.PlaceholderStoreCard onClick={handleLoginRequired}>
               <I.PlaceholderImage />
               <I.PlaceholderInfo>
                 <I.PlaceholderBar />
@@ -481,13 +536,13 @@ export default function CustomerHome() {
           </I.Section>
 
           {/* 하단 버튼들 */}
-          <I.FixedBottomContainer>
+          <I.BottomSection>
             <BottomLine />
             <I.BottomButtons>
               <I.LoginButton onClick={() => navigate('/login')}>로그인</I.LoginButton>
               <I.StartButton onClick={() => navigate('/signup')}>시작하기</I.StartButton>
             </I.BottomButtons>
-          </I.FixedBottomContainer>
+          </I.BottomSection>
         </I.PageWithHeader>
       </>
     );
@@ -806,14 +861,64 @@ export default function CustomerHome() {
         </I.Section>
 
         {/* 하단 버튼들 */}
-        <I.FixedBottomContainer>
+        <I.BottomSection>
           <BottomLine />
           <I.BottomButtons>
             <I.LogoutButton onClick={handleLogout}>로그아웃</I.LogoutButton>
             <I.WithdrawButton onClick={handleWithdraw}>회원 탈퇴</I.WithdrawButton>
           </I.BottomButtons>
-        </I.FixedBottomContainer>
+        </I.BottomSection>
       </I.PageWithHeader>
+
+      {/* 로그아웃 확인 모달 */}
+      <Modal
+        open={logoutModalOpen}
+        title="로그아웃"
+        description="현재 로그인된 계정에서 로그아웃돼요."
+        cancelText="취소"
+        confirmText="로그아웃"
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirm={confirmLogout}
+        variant="primary"
+        width={320}
+      />
+
+      {/* 회원탈퇴 확인 모달 */}
+      <Modal
+        open={withdrawModalOpen}
+        title="회원 탈퇴"
+        description={
+          <>
+            회원 탈퇴 시 계정, 관심 키워드 등 <span>모든 데이터가 삭제</span>되며,{' '}
+            <span>복구할 수 없어요</span>.
+          </>
+        }
+        cancelText="취소"
+        confirmText="회원 탈퇴"
+        onClose={() => setWithdrawModalOpen(false)}
+        onConfirm={confirmWithdraw}
+        variant="danger"
+        width={320}
+      />
+
+      {/* 로그인 안내 모달 */}
+      <Modal
+        open={loginRequiredModalOpen}
+        title="회원 기능"
+        description="로그인 후 이용 가능한 페이지예요"
+        cancelText="로그인"
+        confirmText="시작하기"
+        onClose={() => {
+          setLoginRequiredModalOpen(false);
+          navigate('/login');
+        }}
+        onConfirm={() => {
+          setLoginRequiredModalOpen(false);
+          navigate('/signup');
+        }}
+        variant="primary"
+        width={320}
+      />
     </>
   );
 }

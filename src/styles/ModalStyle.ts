@@ -6,30 +6,15 @@ export type ModalVariant = 'primary' | 'danger';
 type BtnTone = 'muted' | ModalVariant;
 
 export const Overlay = styled.div`
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  width: 390px;
-  height: 800px;
-
-  margin: 0 auto;
-  @media (hover: none) and (pointer: coarse) {
-    width: 100%;
-    height: 100vh;
-    margin: 0 auto;
-
-    @media (min-width: 768px) {
-      body {
-        width: 390px;
-        margin: 0 auto;
-        height: 100vh;
-      }
-    }
-  }
+  z-index: 99999;
+  width: 100%;
+  height: 100vh;
 `;
 
 export const Card = styled.div<{ $width: number | string }>`
@@ -72,14 +57,16 @@ export const BtnRow = styled.div`
 const mutedStyles = ({ $context }: { $context?: ModalVariant }) =>
   $context === 'danger'
     ? css`
-        border: none;
+        border: none !important;
+        outline: none !important;
         background: ${palette.highlightRed20};
         color: ${palette.highlightRed};
         font-size: 14px;
         font-weight: 600;
       `
     : css`
-        border: none;
+        border: none !important;
+        outline: none !important;
         background: ${palette.brandPrimary20};
         color: ${palette.brandPrimary};
         font-size: 14px;
@@ -88,14 +75,16 @@ const mutedStyles = ({ $context }: { $context?: ModalVariant }) =>
 
 const toneStyles = {
   primary: css`
-    border: none;
+    border: none !important;
+    outline: none !important;
     background: ${palette.brandPrimary};
     color: ${palette.card};
     font-size: 14px;
     font-weight: 600;
   `,
   danger: css`
-    border: none;
+    border: none !important;
+    outline: none !important;
     background: ${palette.highlightRed};
     color: ${palette.card};
     font-size: 14px;
@@ -110,5 +99,18 @@ export const Btn = styled.button<{ $tone: BtnTone; $context?: ModalVariant }>`
   height: 48px;
   padding: 5px 16px;
   cursor: pointer;
+  border: none;
+  outline: none;
+
+  &:focus {
+    outline: none;
+    border: none;
+  }
+
+  &:active {
+    outline: none;
+    border: none;
+  }
+
   ${({ $tone, $context }) => ($tone === 'muted' ? mutedStyles({ $context }) : toneStyles[$tone])}
 `;

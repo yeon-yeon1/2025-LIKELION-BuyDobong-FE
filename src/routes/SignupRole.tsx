@@ -16,6 +16,7 @@ const api = axios.create({
 });
 
 type PartialSignup = {
+  phone: string;
   verifiedPhoneToken: string;
   password: string;
   passwordConfirm: string;
@@ -33,7 +34,7 @@ function SignupRole() {
     if (!raw) return setErr('이전 단계 정보가 없습니다. 처음부터 진행해주세요.');
     try {
       const p = JSON.parse(raw) as PartialSignup;
-      if (!p.verifiedPhoneToken || !p.password || !p.passwordConfirm) {
+      if (!p.phone || !p.verifiedPhoneToken || !p.password || !p.passwordConfirm) {
         setErr('이전 단계 정보가 올바르지 않습니다.');
         return;
       }
@@ -56,7 +57,10 @@ function SignupRole() {
       setSubmitting(true);
       setErr('');
       const payload = {
-        ...partial,
+        phone: partial.phone,
+        verifiedPhoneToken: partial.verifiedPhoneToken,
+        password: partial.password,
+        passwordConfirm: partial.passwordConfirm,
         role: role.toUpperCase() as 'MERCHANT' | 'CONSUMER',
       };
       const { data, status } = await api.post('/api/auth/register', payload, {

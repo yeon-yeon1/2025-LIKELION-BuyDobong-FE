@@ -7,6 +7,8 @@ import { listRecentStores, removeRecentStore, type RecentStore } from '@lib/api/
 import * as I from '@styles/customer/InterestMarketStyle';
 import DeleteBtn from '@assets/deleteButton.svg?react';
 import WarningIcon from '@assets/WarningIcon.svg?react';
+import RightArrow from '@assets/RightArrow.svg?react';
+import BottomLine from '@assets/BottomLine.svg?react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -467,7 +469,7 @@ export default function CustomerHome() {
                 <I.PlaceholderBar />
                 <I.PlaceholderBar />
               </I.PlaceholderInfo>
-              <I.Chevron aria-hidden>›</I.Chevron>
+              <RightArrow />
             </I.PlaceholderStoreCard>
           </I.Section>
 
@@ -483,15 +485,18 @@ export default function CustomerHome() {
                 <I.PlaceholderBar />
                 <I.PlaceholderBar />
               </I.PlaceholderInfo>
-              <I.Chevron aria-hidden>›</I.Chevron>
+              <RightArrow />
             </I.PlaceholderStoreCard>
           </I.Section>
 
           {/* 하단 버튼들 */}
-          <I.BottomButtons>
-            <I.LoginButton onClick={() => navigate('/login')}>로그인</I.LoginButton>
-            <I.StartButton onClick={() => navigate('/signup')}>시작하기</I.StartButton>
-          </I.BottomButtons>
+          <I.FixedBottomContainer>
+            <BottomLine />
+            <I.BottomButtons>
+              <I.LoginButton onClick={() => navigate('/login')}>로그인</I.LoginButton>
+              <I.StartButton onClick={() => navigate('/signup')}>시작하기</I.StartButton>
+            </I.BottomButtons>
+          </I.FixedBottomContainer>
         </I.PageWithHeader>
       </>
     );
@@ -810,10 +815,13 @@ export default function CustomerHome() {
         </I.Section>
 
         {/* 하단 버튼들 */}
-        <I.BottomButtons>
-          <I.LogoutButton onClick={handleLogout}>로그아웃</I.LogoutButton>
-          <I.WithdrawButton onClick={handleWithdraw}>회원 탈퇴</I.WithdrawButton>
-        </I.BottomButtons>
+        <I.FixedBottomContainer>
+          <BottomLine />
+          <I.BottomButtons>
+            <I.LogoutButton onClick={handleLogout}>로그아웃</I.LogoutButton>
+            <I.WithdrawButton onClick={handleWithdraw}>회원 탈퇴</I.WithdrawButton>
+          </I.BottomButtons>
+        </I.FixedBottomContainer>
       </I.PageWithHeader>
     </>
   );

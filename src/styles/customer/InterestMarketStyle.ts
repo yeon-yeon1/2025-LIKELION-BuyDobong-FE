@@ -12,7 +12,7 @@ export const Page = styled.main`
 `;
 
 export const PageWithHeader = styled.main`
-  padding: 68px 16px 32px; /* 헤더 높이(56px) + 여백(12px) */
+  padding: 68px 16px 120px; /* 헤더 높이(56px) + 여백(12px) + 하단버튼 높이(80px) + 여백(40px) */
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -317,34 +317,46 @@ export const PlaceholderInfo = styled.div`
   gap: 8px;
 `;
 
+/* 하단 고정 컨테이너 */
+export const FixedBottomContainer = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 350px;
+  z-index: 1000;
+  background-color: transparent;
+`;
+
 /* 하단 버튼들 */
 export const BottomButtons = styled.div`
   display: flex;
   gap: 12px;
-  margin-top: 24px;
+  padding: 16px 20px 32px;
 `;
 
 export const LoginButton = styled.button`
   flex: 1;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 18px;
   background: ${palette.brandPrimary20};
   border: 0;
-  color: ${palette.textPrimary};
+  color: ${palette.brandPrimary};
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
 `;
 
 export const StartButton = styled.button`
   flex: 1;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 18px;
   background: ${palette.brandPrimary};
   border: 0;
-  color: white;
+  color: ${palette.card};
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
 `;
 

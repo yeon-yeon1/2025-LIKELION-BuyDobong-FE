@@ -105,7 +105,6 @@ export const KeywordSearch = styled.main`
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-height: 100vh;
 `;
 
 export const SearchForm = styled.form`
@@ -429,4 +428,13 @@ export const CheckItem = styled.button<{ $selected?: boolean }>`
 
 export const ErrorText = styled.div``;
 
-export const Loading = styled.div``;
+export const Loading = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 700;
+  color: ${palette.textPrimary};
+`;

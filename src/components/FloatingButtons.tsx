@@ -8,7 +8,7 @@ import HomeIcon from '@assets/HomeIcon.svg?react';
 const FloatingContainer = styled.div`
   position: fixed;
   right: 20px;
-  bottom: 56px;
+  bottom: 80px;
   display: flex;
   flex-direction: column;
   gap: 12px;

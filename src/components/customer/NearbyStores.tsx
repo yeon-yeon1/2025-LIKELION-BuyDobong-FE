@@ -32,6 +32,11 @@ const RefreshButton = styled.button`
   &:active {
     transform: scale(0.95);
   }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
 const StoresContainer = styled.div`
@@ -158,48 +163,67 @@ interface NearbyStoresProps {
   stores: NearbyStore[];
   onStoreClick: (store: NearbyStore) => void;
   onRefresh?: () => void;
+  loading?: boolean;
 }
 
-export default function NearbyStores({ stores, onStoreClick, onRefresh }: NearbyStoresProps) {
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  color: ${palette.textSecondary};
+  font-size: 14px;
+`;
+
+export default function NearbyStores({
+  stores,
+  onStoreClick,
+  onRefresh,
+  loading = false,
+}: NearbyStoresProps) {
   return (
     <Container>
       <SectionHeader>
         <SectionTitle>우리 동네 상점 둘러보기</SectionTitle>
         {onRefresh && (
-          <RefreshButton onClick={onRefresh} aria-label="새로고침">
+          <RefreshButton onClick={onRefresh} aria-label="새로고침" disabled={loading}>
             <RandomBtn />
           </RefreshButton>
         )}
       </SectionHeader>
       <StoresContainer>
-        {stores.map((store) => (
-          <StoreWrapper key={store.id}>
-            <ImageCard onClick={() => onStoreClick(store)}>
-              {store.imageUrl && store.imageUrl.trim() !== '' ? (
-                <StoreImage src={store.imageUrl} alt={store.name} loading="lazy" />
-              ) : (
-                <DefaultStoreImage style={{ width: '100%', height: '100%' }} />
-              )}
-            </ImageCard>
-            <InfoCardWrapper>
-              <InfoCard onClick={() => onStoreClick(store)}>
-                <StoreName>
-                  {store.name}
-                  <RightArrow viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6l6 6-6 6-1.41-1.41z" />
-                  </RightArrow>
-                </StoreName>
-                <StoreMeta>
-                  <MarketName>{store.market}</MarketName>
-                  <StatusChip $open={store.open}>
-                    <StatusDot $open={store.open} />
-                    {store.open ? '영업중' : '영업 종료'}
-                  </StatusChip>
-                </StoreMeta>
-              </InfoCard>
-            </InfoCardWrapper>
-          </StoreWrapper>
-        ))}
+        {loading ? (
+          <LoadingContainer>불러오는 중...</LoadingContainer>
+        ) : (
+          stores.map((store) => (
+            <StoreWrapper key={store.id}>
+              <ImageCard onClick={() => onStoreClick(store)}>
+                {store.imageUrl && store.imageUrl.trim() !== '' ? (
+                  <StoreImage src={store.imageUrl} alt={store.name} loading="lazy" />
+                ) : (
+                  <DefaultStoreImage style={{ width: '100%', height: '100%' }} />
+                )}
+              </ImageCard>
+              <InfoCardWrapper>
+                <InfoCard onClick={() => onStoreClick(store)}>
+                  <StoreName>
+                    {store.name}
+                    <RightArrow viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6l6 6-6 6-1.41-1.41z" />
+                    </RightArrow>
+                  </StoreName>
+                  <StoreMeta>
+                    <MarketName>{store.market}</MarketName>
+                    <StatusChip $open={store.open}>
+                      <StatusDot $open={store.open} />
+                      {store.open ? '영업중' : '영업 종료'}
+                    </StatusChip>
+                  </StoreMeta>
+                </InfoCard>
+              </InfoCardWrapper>
+            </StoreWrapper>
+          ))
+        )}
       </StoresContainer>
     </Container>
   );

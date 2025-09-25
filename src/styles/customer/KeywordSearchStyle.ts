@@ -11,6 +11,12 @@ export const Thumb = styled.img<{ small?: boolean }>`
   object-fit: cover;
 `;
 
+export const Container = styled.div`
+  padding: 68px 16px 32px; /* 헤더 높이(56px) + 여백(12px) */
+  max-width: 350px;
+  margin: 0 auto;
+`;
+
 /* ---------------- 상품 모드 ---------------- */
 export const PCard = styled.div`
   padding: 12px;
@@ -96,10 +102,10 @@ export const DownIcon = styled.span`
 
 /* ------ 기존 것 (참고, 없으면 추가) ------ */
 export const KeywordSearch = styled.main`
-  padding: 12px 16px 32px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-height: 100vh;
 `;
 
 export const SearchForm = styled.form`
@@ -107,10 +113,8 @@ export const SearchForm = styled.form`
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  border-radius: 18px;
+  border-radius: 50px;
   background: ${palette.card};
-  border: 1px solid ${palette.brandPrimary};
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 `;
 export const SearchInput = styled.input`
   flex: 1;
@@ -238,11 +242,11 @@ export const SortBtn = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 4px 10px;
   border-radius: 9999px;
   background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
+  border: none;
+  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
   color: ${palette.textPrimary};
   font-size: 14px;
   cursor: pointer;
@@ -259,7 +263,7 @@ export const FilterButton = styled.button<{ $active?: boolean }>`
 `;
 
 export const FilterIcon = styled(FilterSvg)<{ $active?: boolean }>`
-  width: 36px;
+  width: 35x;
   height: 28px;
   pointer-events: none; /* 클릭 타깃은 버튼 */
 `;

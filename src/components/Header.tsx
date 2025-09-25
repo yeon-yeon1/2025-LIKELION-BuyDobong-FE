@@ -1,9 +1,11 @@
 import React from 'react';
 import * as H from '@styles/HeaderStyle';
-import BackButton from '@assets/BackButton.svg?react';
+import Logo from '@assets/Logo.svg?react';
+import BackIcon from '@assets/BackButton.svg?react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-function Header() {
+// BackButton 컴포넌트
+function BackButton() {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -17,14 +19,28 @@ function Header() {
     }
   };
 
+  // CustomerHome과 MerchantHome에서는 BackButton을 표시하지 않음
+  if (location.pathname === '/merchantHome') {
+    return null;
+  }
+
   return (
-    <>
-      <H.Header>
-        {location.pathname !== '/customerHome' && location.pathname !== '/merchantHome' && (
-          <BackButton onClick={handleBack} />
-        )}
-      </H.Header>
-    </>
+    <H.BackButtonContainer onClick={handleBack}>
+      <BackIcon width={24} height={24} />
+    </H.BackButtonContainer>
+  );
+}
+
+function Header() {
+  return (
+    <H.Header>
+      <H.HeaderContent>
+        <BackButton />
+        <H.LogoContainer>
+          <Logo width={56} height={56} />
+        </H.LogoContainer>
+      </H.HeaderContent>
+    </H.Header>
   );
 }
 

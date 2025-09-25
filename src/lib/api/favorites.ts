@@ -1,7 +1,7 @@
 // src/lib/api/favorites.ts
 import api from '@lib/api/api';
 
-export const FAVORITES_BASE = `/api/consumer/favorite`;
+export const FAVORITES_BASE = `/api/favorite`;
 
 export type FavStore = {
   id: number;
@@ -13,7 +13,7 @@ export type FavStore = {
   createdAt?: string;
 };
 
-/** 관심 상점 목록 조회: GET /api/consumer/favorite */
+/** 관심 상점 목록 조회: GET /api/favorite */
 export async function listFavoriteStores(): Promise<FavStore[]> {
   const { data } = await api.get(FAVORITES_BASE);
   if (Array.isArray(data)) return data as FavStore[];
@@ -21,7 +21,7 @@ export async function listFavoriteStores(): Promise<FavStore[]> {
   return [];
 }
 
-/** 관심 상점 등록: POST /api/consumer/favorite { storeId } */
+/** 관심 상점 등록: POST /api/favorite { storeId } */
 export async function favoriteStore(storeId: number): Promise<FavStore> {
   const { data } = await api.post<FavStore>(
     FAVORITES_BASE,
@@ -31,7 +31,7 @@ export async function favoriteStore(storeId: number): Promise<FavStore> {
   return data;
 }
 
-/** 관심 상점 해제: DELETE /api/consumer/2/favorite-stores/{storeId} */
+/** 관심 상점 해제: DELETE /api/favorite/{storeId} */
 export async function unfavoriteStore(storeId: number): Promise<void> {
   await api.delete(`${FAVORITES_BASE}/${storeId}`);
 }

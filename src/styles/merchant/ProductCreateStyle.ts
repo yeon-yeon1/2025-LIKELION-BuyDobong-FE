@@ -2,7 +2,10 @@ import styled from 'styled-components';
 import palette from '@lib/colorPalette';
 
 export const ProductCreate = styled.div`
-  padding: 20px;
+  padding: 88px 20px 20px; /* 헤더 높이(56px) + 여백(12px) + 기존 패딩(20px) */
+  max-width: 350px;
+  margin: 0 auto;
+  min-height: 100vh;
 `;
 
 export const Title = styled.h1`

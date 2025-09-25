@@ -15,20 +15,20 @@ export type CreateKeywordRes = {
   success: boolean;
 };
 
-/** 관심 키워드 목록 조회: GET /api/consumer/2/keyword */
+/** 관심 키워드 목록 조회: GET /api/keyword */
 export async function listKeywords(): Promise<KeywordItem[]> {
-  const { data } = await api.get(`/api/consumer/keyword`);
+  const { data } = await api.get(`/api/keyword`);
   // 서버가 {items:[...]} 형태로 줄 가능성 방어
   if (Array.isArray(data)) return data as KeywordItem[];
   if (Array.isArray((data as any)?.items)) return data.items as KeywordItem[];
   return [];
 }
 
-/** 관심 키워드 등록: POST /api/consumer/2/keyword { word } */
+/** 관심 키워드 등록: POST /api/keyword { word } */
 export async function createKeyword(word: string) {
   const payload = { word: String(word ?? '').trim() };
   if (!payload.word) throw new Error('word is empty');
-  const { data } = await api.post<CreateKeywordRes>(`/api/consumer/keyword`, payload, {
+  const { data } = await api.post<CreateKeywordRes>(`/api/keyword`, payload, {
     headers: { 'Content-Type': 'application/json' },
   });
   return data;
@@ -37,7 +37,7 @@ export async function createKeyword(word: string) {
 /** 권장: id로 삭제 */
 export async function deleteKeywordById(keywordId: number) {
   if (typeof keywordId !== 'number') throw new Error('keywordId is required');
-  await api.delete(`/api/consumer/keyword/${keywordId}`);
+  await api.delete(`/api/keyword/${keywordId}`);
 }
 
 /** 호환용: word로 들어오면 id를 찾아서 삭제 (추후 제거 권장) */

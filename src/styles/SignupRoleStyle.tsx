@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import palette from '@lib/colorPalette';
 
 export const Page = styled.form`
-  padding: 0 20px 100px;
+  padding: 60px 20px 0;
 `;
 
 export const Head = styled.h1`

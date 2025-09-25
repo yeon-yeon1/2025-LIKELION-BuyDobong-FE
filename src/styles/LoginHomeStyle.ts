@@ -3,61 +3,73 @@ import palette from '@lib/colorPalette';
 import { rgba } from 'polished';
 
 export const LoginHome = styled.div`
+  min-height: 100vh;
+  background-color: ${palette.brandBackground};
   padding: 0 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 `;
 
 export const Logo = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 300px;
-  margin: 0 auto;
-  padding: 139px 0 80px 0;
 `;
 
 //서비스 네임 및 설명
 export const LogoNameBox = styled.div`
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 60px;
 `;
 
-export const Ko = styled.div`
-  color: ${palette.textPrimary};
-  font-size: 32px;
-  font-weight: 600;
-`;
-
-export const En = styled.h3`
-  color: ${palette.brandPrimary};
-  font-size: 20px;
-  font-weight: 500;
-  opacity: 50%;
-  margin: 10px 0;
+export const LogoNameSvg = styled.div`
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 export const Tagline = styled.p`
-  color: ${palette.textSecondary};
+  color: #666;
   font-size: 16px;
   font-weight: 400;
+  margin: 0;
+`;
+
+export const ButtonContainer = styled.div`
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
 `;
 
 //시작하기 버튼
 export const StartButton = styled.button`
-  margin-top: 36px;
   width: 100%;
   height: 56px;
   border: 0;
-  isolation: isolate;
-  background: ${palette.brandPrimary};
-  color: ${palette.card};
+  background: #2f7d69;
+  color: white;
   font-size: 16px;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-
-  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
   border-radius: 18px;
+  transition: all 0.2s ease;
+  color: ${palette.card};
+
+  &:hover {
+    background: #256b5a;
+  }
 
   &:disabled {
     background: ${palette.textDisabled2};
@@ -66,25 +78,35 @@ export const StartButton = styled.button`
 
 //로그인 버튼
 export const LoginButton = styled.button`
-  margin-top: 10px;
   width: 100%;
   height: 56px;
-  border: 0;
-  isolation: isolate;
-  background: ${palette.card};
+  border: 1px solid #b8d4cd;
+  background: ${palette.brandPrimary10};
   color: ${palette.brandPrimary};
-  border: 1px solid ${rgba(palette.brandPrimary, 0.3)};
   font-size: 16px;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-
-  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
   border-radius: 18px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #e8f5f2;
+  }
 
   &:disabled {
     background: ${palette.textDisabled2};
   }
+`;
+
+// 게스트 링크
+export const GuestLink = styled.div`
+  color: ${palette.textSecondary};
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  margin-left: 150px !important;
 `;

@@ -2,6 +2,12 @@ import styled from 'styled-components';
 import palette from '@lib/colorPalette';
 
 export const Header = styled.div`
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 350px;
   display: flex;
   height: 56px;
   padding: 0 20px;
@@ -10,4 +16,51 @@ export const Header = styled.div`
   background: ${palette.brandBackground};
   box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
   z-index: 9999;
+`;
+
+export const HeaderContent = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  position: relative;
+`;
+
+export const BackButtonContainer = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  z-index: 1;
+
+  &:hover {
+    background: ${palette.brandPrimary20};
+  }
+
+  &:active {
+    background: ${palette.brandPrimary40};
+  }
+
+  svg {
+    color: ${palette.textPrimary};
+    transition: color 0.2s ease;
+  }
+
+  &:hover svg {
+    color: ${palette.brandPrimary};
+  }
+`;
+
+export const LogoContainer = styled.div`
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;

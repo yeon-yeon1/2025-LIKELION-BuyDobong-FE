@@ -12,14 +12,20 @@ type Props = {
   /** 키보드와의 간격(px). 기존 bottomOffset → gap 개념으로 사용 */
   bottomOffset?: number;
   restoreFocusTo?: () => HTMLElement | null;
+  /** 로그인 상태 */
+  isLoggedIn?: boolean;
+  /** 로그인 안내 모달 띄우기 */
+  onLoginRequired?: () => void;
 };
 
 export default function InterestNudge({
   show,
   keyword,
   interested,
-  bottomOffset = 12, // ← “키보드 위 12px” 기본 간격
+  bottomOffset = 12, // ← "키보드 위 12px" 기본 간격
   restoreFocusTo,
+  isLoggedIn = true,
+  onLoginRequired,
 }: Props) {
   const dockRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
@@ -116,6 +122,13 @@ export default function InterestNudge({
     const kRaw = keyword.trim();
     const k = norm(kRaw);
     if (!k || saving) return;
+
+    // 로그인하지 않은 경우 로그인 안내 모달 띄우기
+    if (!isLoggedIn) {
+      onLoginRequired?.();
+      return;
+    }
+
     if (kwSet.has(k)) {
       setOn(true);
       return;

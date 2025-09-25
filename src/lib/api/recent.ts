@@ -13,7 +13,7 @@ export type RecentStore = {
 
 export async function listRecentStores(): Promise<RecentStore[]> {
   try {
-    const { data } = await api.get('/api/consumer/recent');
+    const { data } = await api.get('/api/recent');
 
     const items = Array.isArray(data)
       ? data
@@ -38,7 +38,7 @@ export async function listRecentStores(): Promise<RecentStore[]> {
 
 export async function removeRecentStore(storeId: number): Promise<void> {
   try {
-    await api.delete(`/api/consumer/recent/${storeId}`);
+    await api.delete(`/api/recent/${storeId}`);
   } catch (e: any) {
     console.warn(
       '[recent] removeRecentStore error',

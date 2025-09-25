@@ -12,6 +12,8 @@ function BackButton() {
   const handleBack = () => {
     if (location.pathname === '/storeRegister' || location.pathname === '/productRegister') {
       navigate('/merchantHome');
+    } else if (location.pathname === '/merchantHome' || location.pathname === '/customerHome') {
+      navigate('/keywordSearch');
     } else if (location.pathname === '/product/new') {
       navigate('/productRegister');
     } else if (location.pathname === '/login') {

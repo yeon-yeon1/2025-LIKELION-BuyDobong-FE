@@ -7,6 +7,7 @@ import Header from '@components/Header';
 import InterestNudge from '@components/customer/InterestNudge';
 import PopularKeywords from '@components/customer/PopularKeywords';
 import NearbyStores, { type NearbyStore } from '@components/customer/NearbyStores';
+import { getRandomStores } from '@lib/api/random';
 import * as K from '@styles/customer/KeywordSearchStyle';
 import SelectToggle, { type Select } from '@components/customer/SelectToggle';
 import StoreResults, { type Store } from '@components/customer/StoreResults';
@@ -90,7 +91,7 @@ export default function KeywordSearch() {
   ];
 
   // 주변 상점 데이터 (임시)
-  const [nearbyStores] = useState<NearbyStore[]>([
+  const [nearbyStores, setNearbyStores] = useState<NearbyStore[]>([
     {
       id: 1,
       name: '도봉분식',
@@ -267,9 +268,15 @@ export default function KeywordSearch() {
   };
 
   // 주변 상점 새로고침 핸들러
-  const handleRefreshNearbyStores = () => {
-    // TODO: API 호출로 주변 상점 데이터 새로고침
-    console.log('주변 상점 새로고침');
+  const handleRefreshNearbyStores = async () => {
+    try {
+      const randomStores = await getRandomStores();
+      setNearbyStores(randomStores);
+      console.log('랜덤 상점 새로고침 완료:', randomStores);
+    } catch (error) {
+      console.error('랜덤 상점 조회 실패:', error);
+      // 에러 발생 시 기존 데이터 유지
+    }
   };
 
   const CheckIcon = styled(GreenCheck)`
@@ -278,6 +285,21 @@ export default function KeywordSearch() {
     flex: 0 0 auto;
     display: inline-block;
   `;
+
+  // 페이지 로드 시 랜덤 상점 가져오기
+  useEffect(() => {
+    const loadRandomStores = async () => {
+      try {
+        const randomStores = await getRandomStores();
+        setNearbyStores(randomStores);
+      } catch (error) {
+        console.error('랜덤 상점 초기 로드 실패:', error);
+        // 에러 발생 시 기본 데이터 유지
+      }
+    };
+
+    loadRandomStores();
+  }, []);
 
   // 언마운트 시 blur 타이머 정리
   useEffect(() => {

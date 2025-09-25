@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import palette from '@lib/colorPalette';
 import { rgba } from 'polished';
 import FilterSvg from '@assets/FilterButton.svg?react';

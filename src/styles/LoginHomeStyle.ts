@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import palette from '@lib/colorPalette';
-import { rgba } from 'polished';
 
 export const LoginHome = styled.div`
   min-height: 100vh;

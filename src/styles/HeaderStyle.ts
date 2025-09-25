@@ -43,7 +43,7 @@ export const BackButtonContainer = styled.button`
   }
 
   &:active {
-    background: ${palette.brandPrimary40};
+    background: ${palette.brandPrimary30};
   }
 
   svg {

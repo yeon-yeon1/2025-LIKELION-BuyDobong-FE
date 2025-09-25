@@ -17,11 +17,12 @@ export async function withdraw(): Promise<void> {
     console.log('회원탈퇴 API 요청 시작');
     const response = await api.delete('/api/auth/withdraw');
     console.log('회원탈퇴 API 응답:', response.status, response.data);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('회원탈퇴 실패:', error);
-    if (error.response) {
-      console.error('응답 데이터:', error.response.data);
-      console.error('응답 상태:', error.response.status);
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response: { data: unknown; status: number } };
+      console.error('응답 데이터:', axiosError.response.data);
+      console.error('응답 상태:', axiosError.response.status);
     }
     throw error;
   }

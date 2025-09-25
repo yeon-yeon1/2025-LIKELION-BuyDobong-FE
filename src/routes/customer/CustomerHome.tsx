@@ -438,7 +438,7 @@ export default function CustomerHome() {
 
           {/* 특가 알림 토글 (비활성화) */}
           <I.ToggleRow>
-            <I.ToggleLabel>특가가 뜨면 알려드릴게요</I.ToggleLabel>
+            <I.PlaceholderBar />
             <I.Switch type="button" aria-pressed={false} $on={false} disabled />
           </I.ToggleRow>
 

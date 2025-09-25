@@ -12,7 +12,7 @@ export const Page = styled.main`
 `;
 
 export const PageWithHeader = styled.main`
-  padding: 68px 16px 120px; /* 헤더 높이(56px) + 여백(12px) + 하단버튼 높이(80px) + 여백(40px) */
+  padding: 68px 16px 32px; /* 헤더 높이(56px) + 여백(12px) + 하단버튼 높이(80px) + 여백(40px) */
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -27,7 +27,7 @@ export const SectionHead = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 10px 15px;
   border-radius: 12px;
   background-color: ${palette.brandPrimary20};
 `;
@@ -202,7 +202,7 @@ export const PageTitle = styled.h1`
   font-weight: 600;
   color: ${palette.textPrimary};
   margin: 0;
-  padding: 16px 0;
+  padding: 0;
 `;
 /* 푸시 알림 토글 */
 export const ToggleRow = styled.div`
@@ -283,8 +283,8 @@ export const PlaceholderCard = styled.div`
 export const PlaceholderBar = styled.div`
   width: 120px;
   height: 12px;
-  border-radius: 6px;
-  background: #e5e5e5;
+  border-radius: 3px;
+  background: ${palette.brandBackground};
 `;
 
 export const PlaceholderToggle = styled.div`
@@ -306,8 +306,8 @@ export const PlaceholderStoreCard = styled.div`
 export const PlaceholderImage = styled.div`
   width: 56px;
   height: 56px;
-  border-radius: 12px;
-  background: #e5e5e5;
+  border-radius: 3px;
+  background: ${palette.brandBackground};
 `;
 
 export const PlaceholderInfo = styled.div`
@@ -333,7 +333,7 @@ export const FixedBottomContainer = styled.div`
 export const BottomButtons = styled.div`
   display: flex;
   gap: 12px;
-  padding: 16px 20px 32px;
+  padding: 16px 0 32px;
 `;
 
 export const LoginButton = styled.button`

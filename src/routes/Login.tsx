@@ -41,11 +41,7 @@ export default function Login() {
     const role = sessionStorage.getItem('auth:role') as 'MERCHANT' | 'CUSTOMER' | null;
 
     if (token && role) {
-      if (role === 'MERCHANT') {
-        navigate('/merchantHome', { replace: true });
-      } else if (role === 'CUSTOMER') {
-        navigate('/customerHome', { replace: true });
-      }
+      navigate('/keywordSearch', { replace: true });
     } else {
       // 토큰이 없으면 axios 기본 헤더 정리
       delete axios.defaults.headers.common.Authorization;
@@ -88,10 +84,8 @@ export default function Login() {
         }
 
         // ✅ 4) 라우팅
-        if (data.role === 'MERCHANT') {
-          navigate('/merchantHome', { replace: true });
-        } else if (data.role === 'CONSUMER') {
-          navigate('/customerHome', { replace: true });
+        if (data.role === 'MERCHANT' || data.role === 'CONSUMER') {
+          navigate('/keywordSearch', { replace: true });
         } else {
           navigate('/', { replace: true });
         }

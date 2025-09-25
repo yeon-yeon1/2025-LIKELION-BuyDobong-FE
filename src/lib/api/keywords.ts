@@ -15,7 +15,7 @@ export type CreateKeywordRes = {
   success: boolean;
 };
 
-/** 관심 키워드 목록 조회: GET /api/consumer/2/keyword */
+/** 관심 키워드 목록 조회: GET /api/keyword */
 export async function listKeywords(): Promise<KeywordItem[]> {
   const { data } = await api.get(`/api/keyword`);
   // 서버가 {items:[...]} 형태로 줄 가능성 방어
@@ -24,7 +24,7 @@ export async function listKeywords(): Promise<KeywordItem[]> {
   return [];
 }
 
-/** 관심 키워드 등록: POST /api/consumer/2/keyword { word } */
+/** 관심 키워드 등록: POST /api/keyword { word } */
 export async function createKeyword(word: string) {
   const payload = { word: String(word ?? '').trim() };
   if (!payload.word) throw new Error('word is empty');

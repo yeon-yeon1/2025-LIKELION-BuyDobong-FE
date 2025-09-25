@@ -9,6 +9,7 @@ import PopularKeywords from '@components/customer/PopularKeywords';
 import NearbyStores, { type NearbyStore } from '@components/customer/NearbyStores';
 import FloatingButtons from '@components/FloatingButtons';
 import { getRandomStores } from '@lib/api/random';
+import { getPopularKeywords, type PopularKeyword } from '@lib/api/popular';
 import * as K from '@styles/customer/KeywordSearchStyle';
 import SelectToggle, { type Select } from '@components/customer/SelectToggle';
 import StoreResults, { type Store } from '@components/customer/StoreResults';
@@ -82,18 +83,7 @@ export default function KeywordSearch() {
   const [errorText, setErrorText] = useState<string | null>(null);
 
   // 인기 키워드 데이터
-  const popularKeywords = [
-    '무화과',
-    '사과',
-    '떡볶이',
-    '꽈배기',
-    '바나나',
-    '족발',
-    '만두만두만두만',
-    '닭강정',
-    '부침개',
-    '잡채',
-  ];
+  const [popularKeywords, setPopularKeywords] = useState<PopularKeyword[]>([]);
 
   // 주변 상점 데이터 (임시)
   const [nearbyStores, setNearbyStores] = useState<NearbyStore[]>([
@@ -176,7 +166,7 @@ export default function KeywordSearch() {
       };
       if (markets.length > 0) params.markets = markets.join(',');
 
-      const { data } = await api.get<ApiItem[]>(`/api/consumer/search`, {
+      const { data } = await api.get<ApiItem[]>(`/api/search`, {
         params,
         signal: controller.signal,
       });
@@ -293,21 +283,14 @@ export default function KeywordSearch() {
 
   // 로그인 상태 및 역할 확인
   useEffect(() => {
-    const checkAuthStatus = async () => {
+    const checkAuthStatus = () => {
       const token = sessionStorage.getItem('auth:token') || localStorage.getItem('accessToken');
+      const role = sessionStorage.getItem('auth:role') as 'MERCHANT' | 'CUSTOMER' | null;
+
       if (token) {
-        try {
-          // 토큰이 있으면 서버에 검증 요청
-          const response = await api.get('/api/auth/me');
-          setIsLoggedIn(true);
-          setUserRole(response.data.role);
-        } catch (error) {
-          // 토큰이 유효하지 않으면 로그아웃 처리
-          setIsLoggedIn(false);
-          setUserRole(null);
-          sessionStorage.removeItem('auth:token');
-          localStorage.removeItem('accessToken');
-        }
+        // 토큰이 있으면 로그인 상태로 설정
+        setIsLoggedIn(true);
+        setUserRole(role);
       } else {
         setIsLoggedIn(false);
         setUserRole(null);
@@ -315,6 +298,22 @@ export default function KeywordSearch() {
     };
 
     checkAuthStatus();
+  }, []);
+
+  // 페이지 로드 시 인기 키워드 가져오기
+  useEffect(() => {
+    const loadPopularKeywords = async () => {
+      try {
+        const keywords = await getPopularKeywords();
+        setPopularKeywords(keywords);
+      } catch (error) {
+        console.error('인기 키워드 로드 실패:', error);
+        // 에러 발생 시 빈 배열 유지
+        setPopularKeywords([]);
+      }
+    };
+
+    loadPopularKeywords();
   }, []);
 
   // 페이지 로드 시 랜덤 상점 가져오기
@@ -389,7 +388,10 @@ export default function KeywordSearch() {
           {!hasSearchResults ? (
             // 검색 전 화면
             <>
-              <PopularKeywords keywords={popularKeywords} onKeywordClick={handleKeywordClick} />
+              <PopularKeywords
+                keywords={popularKeywords.map((k) => k.word)}
+                onKeywordClick={handleKeywordClick}
+              />
               <NearbyStores
                 stores={nearbyStores}
                 onStoreClick={handleNearbyStoreClick}
@@ -412,7 +414,6 @@ export default function KeywordSearch() {
                       <path d="M7 10l5 5 5-5H7z" />
                     </svg>
                   </K.SortBtn>
-
                   <K.FilterButton $active={isFilterActive} onClick={openFilter} aria-label="필터">
                     <K.FilterIcon $active={isFilterActive} aria-hidden />
                   </K.FilterButton>

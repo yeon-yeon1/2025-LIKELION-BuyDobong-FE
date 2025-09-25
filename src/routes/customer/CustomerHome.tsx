@@ -19,7 +19,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  if (!config.url?.includes('/api/consumer/vapid')) {
+  if (!config.url?.includes('/api/vapid')) {
     const token =
       localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || '';
     if (token) {
@@ -32,7 +32,7 @@ api.interceptors.request.use((config) => {
 // 푸시 알림 관련 함수들 (CustomerHome.tsx에서 가져옴)
 async function getPushStatus(): Promise<{ pushEnabled: boolean } | null> {
   try {
-    const { data } = await api.get('/api/consumer/push');
+    const { data } = await api.get('/api/push');
     return data;
   } catch (err: unknown) {
     if (axios.isAxiosError(err)) {
@@ -44,7 +44,7 @@ async function getPushStatus(): Promise<{ pushEnabled: boolean } | null> {
 
 async function patchPushEnabled(enabled: boolean): Promise<boolean> {
   try {
-    const res = await api.patch('/api/consumer/push', { pushEnabled: enabled });
+    const res = await api.patch('/api/push', { pushEnabled: enabled });
     const serverEnabled = (res.data?.pushEnabled ?? res.data?.enabled ?? enabled) as boolean;
     console.log('[push] patchPushEnabled ->', res.status, res.data);
     return !!serverEnabled;
@@ -75,7 +75,7 @@ async function upsertSubscriptionToServer(sub: PushSubscription): Promise<boolea
     const payload = { endpoint, p256dh, auth };
     console.log('[push] upsert payload(strict) →', payload);
 
-    const res = await api.post('/api/consumer/subscription', payload, {
+    const res = await api.post('/api/subscription', payload, {
       validateStatus: () => true,
     });
     console.log('[push] upsert response:', res.status, res.data);
@@ -90,7 +90,7 @@ async function upsertSubscriptionToServer(sub: PushSubscription): Promise<boolea
 
 async function getVapidPublicKey(): Promise<string | null> {
   try {
-    const { data } = await api.get('/api/consumer/vapid');
+    const { data } = await api.get('/api/vapid');
     const key = (typeof data === 'string' ? data : data?.publicKey ?? data?.vapid ?? data?.key) as
       | string
       | undefined;
@@ -151,17 +151,8 @@ export default function CustomerHome() {
           sessionStorage.getItem('accessToken') ||
           sessionStorage.getItem('auth:token');
         if (token) {
-          // 토큰이 있으면 API 호출로 유효성 검증
-          try {
-            await api.get('/api/consumer/profile');
-            setIsLoggedIn(true);
-          } catch {
-            // 토큰이 무효하면 제거
-            localStorage.removeItem('accessToken');
-            sessionStorage.removeItem('accessToken');
-            sessionStorage.removeItem('auth:token');
-            setIsLoggedIn(false);
-          }
+          // 토큰이 있으면 로그인 상태로 설정
+          setIsLoggedIn(true);
         } else {
           setIsLoggedIn(false);
         }

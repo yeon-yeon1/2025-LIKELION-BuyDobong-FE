@@ -10,9 +10,13 @@ const api = axios.create({
   // withCredentials: true,
 });
 
-// 세션스토리지에만 저장된 토큰을 읽기
+// 토큰을 여러 저장소에서 읽기
 const getToken = () =>
-  (typeof window !== 'undefined' && sessionStorage.getItem('auth:token')) || null;
+  (typeof window !== 'undefined' &&
+    (sessionStorage.getItem('auth:token') ||
+      localStorage.getItem('accessToken') ||
+      sessionStorage.getItem('accessToken'))) ||
+  null;
 
 // (선택) 로그인/로그아웃 시 편하게 쓰라고 내보내는 헬퍼
 export const setSessionToken = (token?: string) => {

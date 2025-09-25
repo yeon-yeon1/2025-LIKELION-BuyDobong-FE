@@ -40,7 +40,7 @@ const FloatingButton = styled.button<{ $primary?: boolean }>`
 `;
 
 interface FloatingButtonsProps {
-  userRole?: 'MERCHANT' | 'CUSTOMER';
+  userRole: 'MERCHANT' | 'CUSTOMER' | null;
   isLoggedIn: boolean;
 }
 

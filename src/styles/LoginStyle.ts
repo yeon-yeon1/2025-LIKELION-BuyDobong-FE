@@ -2,7 +2,10 @@ import styled from 'styled-components';
 import palette from '@lib/colorPalette';
 
 export const Page = styled.div`
-  padding: 0 20px;
+  padding: 68px 20px 20px; /* 헤더 높이(56px) + 여백(12px) */
+  max-width: 350px;
+  margin: 0 auto;
+  min-height: 100vh;
 `;
 
 export const Head = styled.h1`

@@ -242,11 +242,11 @@ export const SortBtn = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 4px 10px;
   border-radius: 9999px;
   background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
+  border: none;
+  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
   color: ${palette.textPrimary};
   font-size: 14px;
   cursor: pointer;
@@ -263,7 +263,7 @@ export const FilterButton = styled.button<{ $active?: boolean }>`
 `;
 
 export const FilterIcon = styled(FilterSvg)<{ $active?: boolean }>`
-  width: 36px;
+  width: 35x;
   height: 28px;
   pointer-events: none; /* 클릭 타깃은 버튼 */
 `;

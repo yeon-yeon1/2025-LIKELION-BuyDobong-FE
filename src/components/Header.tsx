@@ -14,13 +14,15 @@ function BackButton() {
       navigate('/merchantHome');
     } else if (location.pathname === '/product/new') {
       navigate('/productRegister');
+    } else if (location.pathname === '/login') {
+      navigate('/');
     } else {
       navigate(-1);
     }
   };
 
-  // CustomerHome과 MerchantHome에서는 BackButton을 표시하지 않음
-  if (location.pathname === '/merchantHome') {
+  // keywordSearch 메인 경로일 때만 BackButton을 숨김 (쿼리스트링이 붙어 있으면 표시)
+  if (location.pathname === '/keywordSearch' && !location.search) {
     return null;
   }
 

@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import palette from '@lib/colorPalette';
 import RandomBtn from '@assets/RandomBtn.svg?react';
+import DefaultStoreImage from '@assets/StoreImage.svg?react';
 const Container = styled.div`
   margin: 18px 0;
 `;
@@ -65,8 +66,8 @@ const StoreWrapper = styled.div`
 const ImageCard = styled.div`
   width: 125px;
   aspect-ratio: 1;
-  background: white;
-  border-radius: 16px;
+  border: 1px solid var(--card, #fff);
+  border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   cursor: pointer;
@@ -108,9 +109,8 @@ const StoreMeta = styled.div`
 const MarketName = styled.span`
   font-size: 12px;
   padding: 4px 8px;
-  border-radius: 16px;
-  background: white;
-  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: ${palette.card};
   color: ${palette.textPrimary};
   font-weight: 400;
   white-space: nowrap;
@@ -123,7 +123,7 @@ const MarketName = styled.span`
 const StatusChip = styled.span<{ $open: boolean }>`
   font-size: 12px;
   padding: 4px 8px;
-  border-radius: 16px;
+  border-radius: 12px;
   background: ${(props) => (props.$open ? palette.brandPrimary20 : '#f5f5f5')};
   color: ${(props) => (props.$open ? palette.brandPrimary : palette.textSecondary)};
   display: flex;
@@ -175,14 +175,11 @@ export default function NearbyStores({ stores, onStoreClick, onRefresh }: Nearby
         {stores.map((store) => (
           <StoreWrapper key={store.id}>
             <ImageCard onClick={() => onStoreClick(store)}>
-              <StoreImage
-                src={
-                  store.imageUrl ||
-                  'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=256&q=80'
-                }
-                alt={store.name}
-                loading="lazy"
-              />
+              {store.imageUrl && store.imageUrl.trim() !== '' ? (
+                <StoreImage src={store.imageUrl} alt={store.name} loading="lazy" />
+              ) : (
+                <DefaultStoreImage style={{ width: '100%', height: '100%' }} />
+              )}
             </ImageCard>
             <InfoCardWrapper>
               <InfoCard onClick={() => onStoreClick(store)}>

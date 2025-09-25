@@ -102,7 +102,7 @@ export default function KeywordSearch() {
       id: 2,
       name: '황금만두',
       market: '방학동도깨비시장',
-      imageUrl: 'https://images.unsplash.com/photo-1563379091339-03246963d5e5?w=256&q=80',
+      imageUrl: '',
       open: true,
     },
     {

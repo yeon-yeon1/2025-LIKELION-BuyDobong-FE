@@ -24,10 +24,6 @@ const CollapsedView = styled.div`
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-
-  &:hover {
-    background: #ddd;
-  }
 `;
 
 const CollapsedKeyword = styled.div`

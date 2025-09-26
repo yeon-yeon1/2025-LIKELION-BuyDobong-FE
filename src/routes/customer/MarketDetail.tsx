@@ -164,7 +164,7 @@ export default function StoreDetailPage() {
   return (
     <>
       {/* 고정 헤더 */}
-      <div
+      {/* <div
         data-app-header
         style={{
           position: 'fixed',
@@ -175,9 +175,9 @@ export default function StoreDetailPage() {
           maxWidth: 412,
           zIndex: 9999,
         }}
-      >
-        <Header />
-      </div>
+      > */}
+      <Header />
+      {/* </div> */}
 
       <S.Wrap>
         {/* 고정 배경(히어로) — 스크롤해도 배경은 그대로 블러만 */}

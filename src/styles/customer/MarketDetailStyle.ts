@@ -139,7 +139,7 @@ export const Section = styled.section`
   position: relative;
   padding: 16px 12px 0;
   background: var(--brand-background, #eef1ee);
-  height: 210px;
+  /* height: 210px; */
   z-index: 800;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;

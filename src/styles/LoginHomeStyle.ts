@@ -67,7 +67,7 @@ export const StartButton = styled.button`
   color: ${palette.card};
 
   &:hover {
-    background: #256b5a;
+    /* background: #256b5a; */
   }
 
   &:disabled {
@@ -92,7 +92,7 @@ export const LoginButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: #e8f5f2;
+    /* background: #e8f5f2; */
   }
 
   &:disabled {

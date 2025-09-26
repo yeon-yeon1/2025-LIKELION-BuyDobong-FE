@@ -67,7 +67,7 @@ const StoreWrapper = styled.div`
   }
 
   &:active {
-    transform: translateY(0);
+    /* transform: translateY(0); */
   }
 `;
 

@@ -65,6 +65,7 @@ export const GlobalStyle = createGlobalStyle`
     font-display: swap;
     src: url('/fonts/Pretendard-Black.woff2') format('woff2');
   }
+
   @media (hover: hover) and (pointer: fine) {
     body {
       width: 390px;
@@ -89,7 +90,7 @@ export const GlobalStyle = createGlobalStyle`
     body {
       background-color: ${palette.brandBackground};
       font-family: 'Pretendard', sans-serif;
-            width: 100%;
+      width: 100%;
       margin: 0 auto;
     }
   }
@@ -105,7 +106,6 @@ export const GlobalStyle = createGlobalStyle`
       height: 800px;
       overflow-y: auto;
       overflow-x: hidden;
-
     }
   }
 `;

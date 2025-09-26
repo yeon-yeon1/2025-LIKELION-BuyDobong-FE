@@ -115,7 +115,7 @@ export const IconButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.05);
+    /* background: rgba(0, 0, 0, 0.05); */
   }
 `;
 

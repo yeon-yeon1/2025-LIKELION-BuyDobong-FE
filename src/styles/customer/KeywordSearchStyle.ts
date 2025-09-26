@@ -12,7 +12,7 @@ export const Thumb = styled.img<{ small?: boolean }>`
 `;
 
 export const Container = styled.div`
-  padding: 68px 16px 32px; /* 헤더 높이(56px) + 여백(12px) */
+  padding: 88px 16px 32px; /* 헤더 높이(56px) + 여백(12px) */
   max-width: 350px;
   margin: 0 auto;
 `;
@@ -123,7 +123,7 @@ export const SearchInput = styled.input`
   font-size: 16px;
   line-height: 22px;
   -webkit-text-size-adjust: 100%;
-  color: ${palette.textDisabled};
+  color: ${palette.textPrimary};
   &::placeholder {
     color: ${palette.textSecondary};
     opacity: 0.9;

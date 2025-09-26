@@ -5,6 +5,9 @@ import RandomBtn from '@assets/RandomBtn.svg?react';
 import DefaultStoreImage from '@assets/StoreImage.svg?react';
 const Container = styled.div`
   margin: 18px 0;
+  margin-left: -15px; /* 왼쪽 패딩 제거 */
+  margin-right: -56px; /* 오른쪽 패딩 제거 */
+  padding: 0 16px; /* 내부 패딩으로 제목 영역만 패딩 유지 */
 `;
 
 const SectionHeader = styled.div`
@@ -43,7 +46,7 @@ const StoresContainer = styled.div`
   display: flex;
   gap: 16px;
   overflow-x: auto;
-  padding: 4px 0;
+  padding: 4px 16px 4px 0; /* 오른쪽 패딩 제거, 왼쪽만 패딩 유지 */
 
   &::-webkit-scrollbar {
     display: none;

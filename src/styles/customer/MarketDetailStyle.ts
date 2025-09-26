@@ -9,10 +9,10 @@ export const MarketDetail = styled.div``;
 
 export const Wrap = styled.div`
   max-width: 412px;
-  height: 100dvh;
   margin: 0 auto;
   background: var(--brand-background, #eef1ee);
   position: relative;
+  margin-top: 56px;
 
   /* 자체 스크롤일 때 */
   overflow-y: auto;

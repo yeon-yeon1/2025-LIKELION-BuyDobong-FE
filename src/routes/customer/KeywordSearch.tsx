@@ -87,30 +87,9 @@ export default function KeywordSearch() {
   // 인기 키워드 데이터
   const [popularKeywords, setPopularKeywords] = useState<PopularKeyword[]>([]);
 
-  // 주변 상점 데이터 (임시)
-  const [nearbyStores, setNearbyStores] = useState<NearbyStore[]>([
-    {
-      id: 1,
-      name: '도봉분식',
-      market: '신도봉시장',
-      imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=256&q=80',
-      open: true,
-    },
-    {
-      id: 2,
-      name: '황금만두',
-      market: '방학동도깨비시장',
-      imageUrl: '',
-      open: true,
-    },
-    {
-      id: 3,
-      name: '한입닭강정',
-      market: '백운시장',
-      imageUrl: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=256&q=80',
-      open: true,
-    },
-  ]);
+  // 주변 상점 데이터
+  const [nearbyStores, setNearbyStores] = useState<NearbyStore[]>([]);
+  const [nearbyStoresLoading, setNearbyStoresLoading] = useState<boolean>(true);
 
   // 인풋 포커스 상태 + ref (배지 숨길 때 포커스 복구에 사용)
   const [inputFocused, setInputFocused] = useState(false);
@@ -173,13 +152,31 @@ export default function KeywordSearch() {
         signal: controller.signal,
       });
 
-      if (!Array.isArray(data)) {
+      console.log('🔍 검색 API 응답:', { data, type: typeof data, isArray: Array.isArray(data) });
+
+      // 다양한 응답 구조 처리
+      let searchResults: ApiItem[] = [];
+
+      if (Array.isArray(data)) {
+        searchResults = data;
+      } else if (data && typeof data === 'object') {
+        const responseData = data as Record<string, unknown>;
+        if ('data' in responseData && Array.isArray(responseData.data)) {
+          searchResults = responseData.data as ApiItem[];
+        } else if ('results' in responseData && Array.isArray(responseData.results)) {
+          searchResults = responseData.results as ApiItem[];
+        } else {
+          setStores([]);
+          setGroups([]);
+          return;
+        }
+      } else {
         setStores([]);
         setGroups([]);
         return;
       }
 
-      const nextStores: Store[] = data.map((it) => ({
+      const nextStores: Store[] = searchResults.map((it) => ({
         id: it.store.id,
         name: it.store.name,
         market: it.store.marketLabel,
@@ -187,7 +184,7 @@ export default function KeywordSearch() {
         thumb: it.store.imageUrl,
       }));
 
-      const nextGroups: ProductGroup[] = data.map((it) => ({
+      const nextGroups: ProductGroup[] = searchResults.map((it) => ({
         store: {
           id: it.store.id,
           name: it.store.name,
@@ -267,12 +264,15 @@ export default function KeywordSearch() {
   // 주변 상점 새로고침 핸들러
   const handleRefreshNearbyStores = async () => {
     try {
+      setNearbyStoresLoading(true);
       const randomStores = await getRandomStores();
       setNearbyStores(randomStores);
       console.log('랜덤 상점 새로고침 완료:', randomStores);
     } catch (error) {
       console.error('랜덤 상점 조회 실패:', error);
       // 에러 발생 시 기존 데이터 유지
+    } finally {
+      setNearbyStoresLoading(false);
     }
   };
 
@@ -327,11 +327,15 @@ export default function KeywordSearch() {
   useEffect(() => {
     const loadRandomStores = async () => {
       try {
+        setNearbyStoresLoading(true);
         const randomStores = await getRandomStores();
         setNearbyStores(randomStores);
       } catch (error) {
         console.error('랜덤 상점 초기 로드 실패:', error);
-        // 에러 발생 시 기본 데이터 유지
+        // 에러 발생 시 빈 배열 유지
+        setNearbyStores([]);
+      } finally {
+        setNearbyStoresLoading(false);
       }
     };
 
@@ -403,6 +407,7 @@ export default function KeywordSearch() {
                 stores={nearbyStores}
                 onStoreClick={handleNearbyStoreClick}
                 onRefresh={handleRefreshNearbyStores}
+                loading={nearbyStoresLoading}
               />
             </>
           ) : (
@@ -440,7 +445,7 @@ export default function KeywordSearch() {
               )}
 
               {loading ? (
-                <K.Loading style={{ margin: '24px 12px' }}>불러오는 중…</K.Loading>
+                <K.Loading>불러오는 중…</K.Loading>
               ) : mode === 'store' ? (
                 <StoreResults
                   stores={stores}

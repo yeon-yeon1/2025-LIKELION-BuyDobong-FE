@@ -68,9 +68,22 @@ function SignupRole() {
       });
       console.log('[signup status]', status, data);
       if (status === 200 && data?.accessToken) {
+        const token: string = data.accessToken;
+        const userRole: string = data.role;
+
+        // 토큰과 역할 정보 저장
+        sessionStorage.setItem('auth:token', token);
+        sessionStorage.setItem('auth:role', userRole);
+        sessionStorage.setItem('accessToken', token);
+
+        // axios 기본 헤더에 토큰 설정
+        axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+
+        // 회원가입 정보 정리
         sessionStorage.removeItem('signup:partial');
-        // TODO: accessToken을 전역/메모리에 저장하고 싶다면 여기서 처리
-        navigate('/', { replace: true });
+
+        // 모든 사용자를 공통홈(keywordSearch)으로 이동
+        navigate('/keywordSearch', { replace: true });
         return;
       }
       const msg =

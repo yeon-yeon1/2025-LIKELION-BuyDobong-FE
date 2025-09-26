@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '@components/Header';
 import * as S from '@styles/customer/MarketDetailStyle';
@@ -12,6 +12,7 @@ import InterestedOn from '@assets/InterestedOn.svg?react';
 import InterestedOff from '@assets/InterestedOff.svg?react';
 import { getStoreDetail, type StoreDetail, type StockLevel } from '@lib/api/stores';
 import { favoriteStore, unfavoriteStore } from '@lib/api/favorites';
+import Modal from '@components/Modal';
 
 const HERO_MAX = 220;
 
@@ -45,6 +46,14 @@ export default function StoreDetailPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [savingFav, setSavingFav] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [loginRequiredModalOpen, setLoginRequiredModalOpen] = useState(false);
+
+  // 로그인 상태 확인
+  useEffect(() => {
+    const token = sessionStorage.getItem('auth:token');
+    setIsLoggedIn(!!token);
+  }, []);
 
   // 스크롤에 따른 collapse (히어로는 고정, 카드/썸네일 연출만)
   useEffect(() => {
@@ -69,9 +78,10 @@ export default function StoreDetailPage() {
         if (!alive) return;
         setDetail(data);
         setFav(!!data.favorite);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!alive) return;
-        setErr(e?.response?.data?.message || '상점 정보를 불러오지 못했어요.');
+        const error = e as { response?: { data?: { message?: string } } };
+        setErr(error?.response?.data?.message || '상점 정보를 불러오지 못했어요.');
       } finally {
         if (alive) setLoading(false);
       }
@@ -84,6 +94,13 @@ export default function StoreDetailPage() {
   // 즐겨찾기 토글
   const onToggleFav = async () => {
     if (!Number.isFinite(id) || savingFav) return;
+
+    // 로그인하지 않은 경우 로그인 모달 띄우기
+    if (!isLoggedIn) {
+      setLoginRequiredModalOpen(true);
+      return;
+    }
+
     const next = !fav;
     setFav(next);
     setSavingFav(true);
@@ -91,9 +108,15 @@ export default function StoreDetailPage() {
       if (next) await favoriteStore(id);
       else await unfavoriteStore(id);
       setDetail((d) => (d ? { ...d, favorite: next } : d) as StoreDetail | null);
-    } catch (e) {
+    } catch (e: unknown) {
       setFav(!next); // 롤백
       console.error('favorite toggle failed', e);
+
+      // 403 에러 시 로그인 모달 띄우기
+      const error = e as { response?: { status?: number } };
+      if (error?.response?.status === 403) {
+        setLoginRequiredModalOpen(true);
+      }
     } finally {
       setSavingFav(false);
     }
@@ -236,6 +259,21 @@ export default function StoreDetailPage() {
           </>
         )}
       </S.Wrap>
+
+      {/* 로그인 필요 모달 */}
+      <Modal
+        open={loginRequiredModalOpen}
+        onClose={() => setLoginRequiredModalOpen(false)}
+        onConfirm={() => {
+          setLoginRequiredModalOpen(false);
+          window.location.href = '/login';
+        }}
+        title="로그인이 필요합니다"
+        description="관심상점을 등록하려면 로그인해주세요."
+        cancelText="취소"
+        confirmText="로그인"
+        variant="primary"
+      />
     </>
   );
 }

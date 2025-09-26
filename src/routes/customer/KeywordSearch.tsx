@@ -367,17 +367,38 @@ export default function KeywordSearch() {
               placeholder="상점이나 상품을 검색해보세요..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
+              onClick={() => {
+                // 클릭 시 즉시 포커스하고 플레이스홀더 제거
+                inputRef.current?.focus();
+                if (blurTimerRef.current) {
+                  clearTimeout(blurTimerRef.current);
+                  blurTimerRef.current = null;
+                }
+                setInputFocused(true);
+                // 플레이스홀더를 빈 문자열로 변경
+                if (inputRef.current) {
+                  inputRef.current.placeholder = '';
+                }
+              }}
               onFocus={() => {
                 if (blurTimerRef.current) {
                   clearTimeout(blurTimerRef.current);
                   blurTimerRef.current = null;
                 }
                 setInputFocused(true);
+                // 포커스 시에도 플레이스홀더 제거
+                if (inputRef.current) {
+                  inputRef.current.placeholder = '';
+                }
               }}
               onBlur={() => {
                 // 배지 클릭 동작을 보장하기 위해 약간 지연 후 hide
                 blurTimerRef.current = window.setTimeout(() => {
                   setInputFocused(false);
+                  // 블러 시 플레이스홀더 복원
+                  if (inputRef.current && !q.trim()) {
+                    inputRef.current.placeholder = '상점이나 상품을 검색해보세요...';
+                  }
                 }, 120);
               }}
             />

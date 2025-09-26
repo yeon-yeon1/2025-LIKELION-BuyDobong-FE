@@ -47,6 +47,18 @@ export const Wrapper = styled.div`
   align-items: center;
 `;
 
+export const Loading = styled.div`
+  padding: 12px;
+  color: #666;
+  text-align: center;
+`;
+
+export const ErrorText = styled.div`
+  padding: 12px;
+  color: crimson;
+  text-align: center;
+`;
+
 //
 export const ChangeRow = styled.div`
   display: grid;

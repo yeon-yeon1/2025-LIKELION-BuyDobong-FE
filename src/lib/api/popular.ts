@@ -17,3 +17,4 @@ export async function getPopularKeywords(): Promise<PopularKeyword[]> {
     throw error;
   }
 }
+

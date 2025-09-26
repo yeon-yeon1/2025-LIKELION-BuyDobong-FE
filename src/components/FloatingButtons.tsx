@@ -8,7 +8,7 @@ import HomeIcon from '@assets/HomeIcon.svg?react';
 const FloatingContainer = styled.div`
   position: fixed;
   right: 20px;
-  bottom: 80px;
+  bottom: 60px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -28,11 +28,8 @@ const FloatingButton = styled.button<{ $primary?: boolean }>`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease;
   background: ${(props) => (props.$primary ? palette.brandPrimary : palette.brandPrimary10)};
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  }
+  /* 백그라운드 블러 효과 */
+  backdrop-filter: blur(10px);
 
   &:active {
     transform: translateY(0);

@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { rgba } from 'polished';
 import palette from '@lib/colorPalette';
-import deleteBtn from '@assets/deleteButton.svg?react'; // 방금 준 SVG 파일명으로 저장
+import deleteBtn from '@assets/deleteButton.svg?react';
 
 /* 페이지/섹션 */
 export const Page = styled.main`
@@ -16,7 +16,7 @@ export const PageWithHeader = styled.main`
   display: flex;
   flex-direction: column;
   gap: 18px;
-  min-height: 100vh;
+  /* min-height: 100vh; */
 `;
 export const Section = styled.section`
   display: flex;

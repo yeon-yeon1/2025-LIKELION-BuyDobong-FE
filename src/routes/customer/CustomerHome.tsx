@@ -889,7 +889,7 @@ export default function CustomerHome() {
         title="회원 탈퇴"
         description={
           <>
-            회원 탈퇴 시 계정, 관심 키워드 등 <span>모든 데이터가 삭제</span>되며,{' '}
+            회원 탈퇴 시 계정, 관심 키워드 등 <br /> <span>모든 데이터가 삭제</span>되며,{' '}
             <span>복구할 수 없어요</span>.
           </>
         }

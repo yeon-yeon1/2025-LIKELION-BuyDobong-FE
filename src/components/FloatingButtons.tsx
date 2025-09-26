@@ -6,12 +6,14 @@ import StoreIcon from '@assets/StoreIcon.svg?react';
 import HomeIcon from '@assets/HomeIcon.svg?react';
 
 const FloatingContainer = styled.div`
-  position: fixed;
-  right: 20px;
-  bottom: 60px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  position: fixed;
+  top: 630px;
+  left: 47%;
+  transform: translateX(calc(195px - 100%));
   z-index: 9999;
 `;
 

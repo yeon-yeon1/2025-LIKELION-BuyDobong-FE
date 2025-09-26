@@ -122,7 +122,7 @@ export const IconButton = styled.button`
 // 하단 제출 바 + 버튼
 export const BottomBar = styled.div`
   position: fixed;
-  bottom: 15%;
+  bottom: 18%;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;

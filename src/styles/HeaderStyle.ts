@@ -39,7 +39,7 @@ export const BackButtonContainer = styled.button`
   z-index: 1;
 
   &:hover {
-    background: ${palette.brandPrimary20};
+    /* background: ${palette.brandPrimary20}; */
   }
 
   &:active {
@@ -52,7 +52,7 @@ export const BackButtonContainer = styled.button`
   }
 
   &:hover svg {
-    color: ${palette.brandPrimary};
+    /* color: ${palette.brandPrimary}; */
   }
 `;
 

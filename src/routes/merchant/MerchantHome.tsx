@@ -520,9 +520,6 @@ function MerchantHome() {
           localStorage.removeItem('merchantHome:changeLog');
           localStorage.removeItem('product:specials');
         } catch {}
-        // 삭제 후에는 빈 화면(EmptyStoreCard)이 보이도록 현재 페이지 유지
-        // 필요 시 다음 라인을 사용해 등록 화면으로 보낼 수 있습니다.
-        // navigate('/storeRegister', { replace: true });
       } else if (res.status === 401) {
         setShowDeleteModal(false);
         navigate('/login', { replace: true });
@@ -602,9 +599,8 @@ function MerchantHome() {
 
                 const candidate = latest
                   ? {
-                      id: latest.id, // string
+                      id: latest.id,
                       name: (latest.after?.name || latest.before?.name) ?? '',
-                      // 편집 화면에서 정가/단위/재고를 채우는 힌트로 전달 (없으면 화면에서 서버 재조회)
                       regularPrice: latest.after?.price ?? latest.before?.price,
                       regularUnit: latest.after?.unit ?? latest.before?.unit,
                       stockLevel: latest.after?.stock ?? latest.before?.stock,
@@ -764,17 +760,6 @@ function MerchantHome() {
               상점 삭제
             </M.ModalBtn>
 
-            {/* 로그인 모달 예시 */}
-            {/* <Modal
-              open={showDeleteModal}
-              onClose={() => setShowDeleteModal(false)}
-              onConfirm={() => setShowDeleteModal(false)}
-              title="로그아웃"
-              description={<>현재 로그인된 계정에서 로그아웃돼요.</>}
-              cancelText="취소"
-              confirmText="로그아웃"
-            /> */}
-
             <Modal
               open={showDeleteModal}
               onClose={() => setShowDeleteModal(false)}
@@ -782,7 +767,7 @@ function MerchantHome() {
               title="상점 삭제"
               description={
                 <>
-                  상점을 삭제하면 등록된
+                  상점을 삭제하면 등록된{' '}
                   <span>
                     모든 상품 데이터가 <br />
                     즉시 삭제

@@ -18,7 +18,7 @@ export const Logo = styled.div`
   align-items: center;
 `;
 
-//서비스 네임 및 설명
+// 서비스 네임 및 설명
 export const LogoNameBox = styled.div`
   display: flex;
   flex-direction: column;

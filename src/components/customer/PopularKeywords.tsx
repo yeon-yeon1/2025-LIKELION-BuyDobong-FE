@@ -113,7 +113,7 @@ const KeywordNumber = styled.span`
 // 펼쳐서 보기 버튼
 const ExpandButton = styled.button`
   position: absolute;
-  top: 16px;
+  top: 13px;
   right: 16px;
   background: none;
   border: none;

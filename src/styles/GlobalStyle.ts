@@ -92,6 +92,7 @@ export const GlobalStyle = createGlobalStyle`
       font-family: 'Pretendard', sans-serif;
       width: 100%;
       margin: 0 auto;
+      margin-top: 12px;
     }
   }
 

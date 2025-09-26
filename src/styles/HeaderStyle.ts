@@ -7,17 +7,21 @@ export const Header = styled.div`
   top: constant(safe-area-inset-top);
   top: env(safe-area-inset-top);
 
-  height: calc(56px + constant(safe-area-inset-top));
-  height: calc(56px + env(safe-area-inset-top));
-  padding-top: constant(safe-area-inset-top);
-  padding-top: env(safe-area-inset-top);
+  left: constant(safe-area-inset-left);
+  left: env(safe-area-inset-left);
+
+  right: constant(safe-area-inset-right);
+  right: env(safe-area-inset-right);
+
+  bottom: constant(safe-area-inset-bottom);
+  bottom: env(safe-area-inset-bottom);
 
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 350px;
   display: flex;
-  /* height: 56px; */
+  height: 56px;
   padding: 0 20px;
   align-items: center;
   flex-shrink: 0;

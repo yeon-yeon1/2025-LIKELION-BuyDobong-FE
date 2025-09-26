@@ -3,7 +3,9 @@ import palette from '@lib/colorPalette';
 
 export const Header = styled.div`
   position: fixed;
-  top: 0;
+  /* top: 0; */
+  top: constant(safe-area-inset-top);
+  top: env(safe-area-inset-top);
   left: 50%;
   transform: translateX(-50%);
   width: 100%;

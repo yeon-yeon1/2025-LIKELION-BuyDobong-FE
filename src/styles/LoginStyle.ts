@@ -105,6 +105,18 @@ export const BottomBar = styled.div`
   flex-direction: column;
   gap: 12px;
   align-items: center;
+
+  @media (hover: none) and (pointer: coarse) {
+    margin-top: 380px;
+
+    @media (min-width: 402px) and (max-width: 430px) {
+      margin-top: 300px;
+    }
+
+    @media (min-width: 393px) and (max-width: 400px) {
+      margin-top: 280px;
+    }
+  }
 `;
 
 export const PrimaryCTA = styled.button`

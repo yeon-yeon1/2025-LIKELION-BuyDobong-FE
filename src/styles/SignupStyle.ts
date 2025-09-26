@@ -131,6 +131,10 @@ export const BottomBar = styled.div`
   display: grid;
   place-items: center;
   z-index: 1000;
+
+  @media (hover: none) and (pointer: coarse) {
+    bottom: 0%;
+  }
 `;
 
 export const PrimaryCTA = styled.button`

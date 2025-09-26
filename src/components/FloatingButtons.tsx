@@ -53,7 +53,7 @@ const FloatingButton = styled.button<{ $primary?: boolean }>`
 
   @media (hover: none) and (pointer: coarse) {
     position: fixed;
-    top: 590px;
+    top: 620px;
 
     left: 47%;
     transform: translateX(calc(195px - 100%));
@@ -61,7 +61,7 @@ const FloatingButton = styled.button<{ $primary?: boolean }>`
 
     &:last-child {
       position: fixed;
-      top: 658px;
+      top: 688px;
 
       left: 47%;
       transform: translateX(calc(195px - 100%));
@@ -69,7 +69,7 @@ const FloatingButton = styled.button<{ $primary?: boolean }>`
 
     @media (min-width: 402px) and (max-width: 430px) {
       position: fixed;
-      top: 520px;
+      top: 560px;
 
       left: 47%;
       transform: translateX(calc(190px - 100%));
@@ -77,7 +77,7 @@ const FloatingButton = styled.button<{ $primary?: boolean }>`
 
       &:last-child {
         position: fixed;
-        top: 588px;
+        top: 628px;
 
         left: 47%;
         transform: translateX(calc(190px - 100%));
@@ -86,7 +86,7 @@ const FloatingButton = styled.button<{ $primary?: boolean }>`
 
     @media (min-width: 393px) and (max-width: 400px) {
       position: fixed;
-      top: 510px;
+      top: 550px;
 
       left: 47%;
       transform: translateX(calc(188px - 100%));
@@ -94,7 +94,7 @@ const FloatingButton = styled.button<{ $primary?: boolean }>`
 
       &:last-child {
         position: fixed;
-        top: 578px;
+        top: 618px;
 
         left: 47%;
         transform: translateX(calc(188px - 100%));

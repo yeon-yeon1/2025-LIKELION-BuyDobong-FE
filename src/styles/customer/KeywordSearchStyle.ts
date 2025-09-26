@@ -274,7 +274,7 @@ export const Backdrop = styled.div`
   background: rgba(0, 0, 0, 0.45);
   display: grid;
   place-items: center;
-  z-index: 1000;
+  z-index: 99999;
 `;
 export const Modal = styled.div`
   width: min(520px, calc(100% - 100px));

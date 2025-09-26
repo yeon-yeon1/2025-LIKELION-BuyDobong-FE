@@ -152,13 +152,31 @@ export default function KeywordSearch() {
         signal: controller.signal,
       });
 
-      if (!Array.isArray(data)) {
+      console.log('🔍 검색 API 응답:', { data, type: typeof data, isArray: Array.isArray(data) });
+
+      // 다양한 응답 구조 처리
+      let searchResults: ApiItem[] = [];
+
+      if (Array.isArray(data)) {
+        searchResults = data;
+      } else if (data && typeof data === 'object') {
+        const responseData = data as Record<string, unknown>;
+        if ('data' in responseData && Array.isArray(responseData.data)) {
+          searchResults = responseData.data as ApiItem[];
+        } else if ('results' in responseData && Array.isArray(responseData.results)) {
+          searchResults = responseData.results as ApiItem[];
+        } else {
+          setStores([]);
+          setGroups([]);
+          return;
+        }
+      } else {
         setStores([]);
         setGroups([]);
         return;
       }
 
-      const nextStores: Store[] = data.map((it) => ({
+      const nextStores: Store[] = searchResults.map((it) => ({
         id: it.store.id,
         name: it.store.name,
         market: it.store.marketLabel,
@@ -166,7 +184,7 @@ export default function KeywordSearch() {
         thumb: it.store.imageUrl,
       }));
 
-      const nextGroups: ProductGroup[] = data.map((it) => ({
+      const nextGroups: ProductGroup[] = searchResults.map((it) => ({
         store: {
           id: it.store.id,
           name: it.store.name,

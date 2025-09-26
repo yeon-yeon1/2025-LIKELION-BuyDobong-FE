@@ -36,11 +36,17 @@ function BackButton() {
 }
 
 function Header() {
+  const navigate = useNavigate();
+
+  const handleLogoClick = () => {
+    navigate('/keywordSearch');
+  };
+
   return (
     <H.Header>
       <H.HeaderContent>
         <BackButton />
-        <H.LogoContainer>
+        <H.LogoContainer onClick={handleLogoClick}>
           <Logo width={56} height={56} />
         </H.LogoContainer>
       </H.HeaderContent>

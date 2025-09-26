@@ -3,7 +3,7 @@ import palette from '@lib/colorPalette';
 
 // 페이지 컨테이너
 export const Signup = styled.div`
-  padding: 0 20px;
+  padding: 60px 20px 120px;
 `;
 
 // 제목
@@ -121,10 +121,16 @@ export const IconButton = styled.button`
 
 // 하단 제출 바 + 버튼
 export const BottomBar = styled.div`
-  display: block;
-  margin-top: 250px;
+  position: fixed;
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 350px;
+  padding: 16px 20px 20px;
   display: grid;
   place-items: center;
+  z-index: 1000;
 `;
 
 export const PrimaryCTA = styled.button`

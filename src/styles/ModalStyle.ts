@@ -13,23 +13,8 @@ export const Overlay = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 99999;
-  width: 390px;
-  height: 800px;
-
-  margin: 0 auto;
-  @media (hover: none) and (pointer: coarse) {
-    width: 100%;
-    height: 100vh;
-    margin: 0 auto;
-
-    @media (min-width: 768px) {
-      body {
-        width: 390px;
-        margin: 0 auto;
-        height: 100vh;
-      }
-    }
-  }
+  width: 100%;
+  height: 100vh;
 `;
 
 export const Card = styled.div<{ $width: number | string }>`

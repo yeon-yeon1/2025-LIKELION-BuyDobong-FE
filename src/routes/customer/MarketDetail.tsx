@@ -159,7 +159,7 @@ export default function StoreDetailPage() {
   const heroBg = useMemo(() => detail?.imageUrl?.trim() || FALLBACK_HERO, [detail?.imageUrl]);
 
   // 썸네일 변환: -28px(떠있음) → 0px(카드 자리)로 보간
-  const thumbTransform = `translateY(${-28 * (1 - collapse)}px)`;
+  // const thumbTransform = `translateY(${-28 * (1 - collapse)}px)`;
 
   return (
     <>
@@ -196,7 +196,7 @@ export default function StoreDetailPage() {
         {/* 상점 카드 (스크롤 시 자연스럽게 위로 올라옴) */}
         <S.ShopCard>
           {/* 카드 좌측 썸네일: 처음엔 카드 밖 위로 떠 있다가 collapse=1이면 자리로 */}
-          <S.ThumbInCard src={heroBg} alt="" style={{ transform: thumbTransform }} />
+          <S.ThumbInCard src={heroBg} alt="" />
 
           <S.ShopContainer>
             <S.ChipRow>

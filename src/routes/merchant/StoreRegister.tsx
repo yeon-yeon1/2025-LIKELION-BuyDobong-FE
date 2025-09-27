@@ -13,7 +13,7 @@ import MarketImg from '@assets/MarketImg.svg?react';
 import BlurClose from '@assets/BlurClose.svg?react';
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
 const MARKET_CODE_MAP: Record<string, string> = {
   CHANDONG: 'CHANGDONG',

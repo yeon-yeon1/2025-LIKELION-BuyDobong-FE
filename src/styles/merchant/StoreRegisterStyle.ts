@@ -111,6 +111,16 @@ export const PreviewCardWrap = styled.div`
   background: ${palette.card};
   border-radius: 16px 16px 0 0;
   box-shadow: 0 0 4px 0 ${palette.textPhotoBlur};
+
+  @media (hover: none) and (pointer: coarse) {
+    width: calc(100% + 2 * 44px);
+    transform: translateX(-44px);
+
+    @media (min-width: 402px) and (max-width: 430px) {
+      width: calc(100% + 2 * 25px);
+      transform: translateX(-25px);
+    }
+  }
 `;
 
 export const RegistLabel = styled.span`

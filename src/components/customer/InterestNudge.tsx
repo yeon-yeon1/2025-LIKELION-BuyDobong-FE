@@ -227,8 +227,10 @@ const Dock = styled.div`
 
   @media (hover: none) and (pointer: coarse) {
     left: 12px;
-    /* bottom: calc(env(safe-area-inset-bottom, 0px) + var(--gap, 12px)); */
-    bottom: 0;
+    top: auto;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--gap, 12px));
+    /* inline style에서 주는 transform을 무시하고 모바일에선 바닥 기준으로 고정 */
+    transform: none !important;
   }
 `;
 

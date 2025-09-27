@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import palette from '@lib/colorPalette';
 
 export const LoginHome = styled.div`
-  min-height: 100vh;
+  /* min-height: 100vh; */
   background-color: ${palette.brandBackground};
   padding: 0 30px;
   display: flex;

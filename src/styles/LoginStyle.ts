@@ -100,7 +100,7 @@ export const AutoText = styled.span`
 
 export const BottomBar = styled.div`
   display: block;
-  margin-top: 400px;
+  margin-top: 392px;
   display: flex;
   flex-direction: column;
   gap: 12px;

@@ -133,7 +133,7 @@ export const BottomBar = styled.div`
   z-index: 1000;
 
   @media (hover: none) and (pointer: coarse) {
-    bottom: 0%;
+    bottom: 4%;
   }
 `;
 

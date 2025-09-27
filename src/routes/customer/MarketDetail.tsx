@@ -80,32 +80,32 @@ export default function StoreDetailPage() {
         setFav(!!data.favorite);
       } catch (e: unknown) {
         if (!alive) return;
-        // const error = e as { response?: { data?: { message?: string } } };
-        // setErr(error?.response?.data?.message || '상점 정보를 불러오지 못했어요.');
+        const error = e as { response?: { data?: { message?: string } } };
+        setErr(error?.response?.data?.message || '상점 정보를 불러오지 못했어요.');
 
-        const err = e as { response?: { status?: number; data?: { message?: string } } };
-        const status = err?.response?.status;
-        if (status === 500) {
-          try {
-            const res = await fetch(`https://n0t4u.shop/api/store/${id}/detail`, {
-              method: 'GET',
-              headers: { Accept: '*/*' },
-              mode: 'cors',
-              credentials: 'omit',
-            });
-            if (res.ok) {
-              const data = (await res.json()) as StoreDetail;
-              if (!alive) return;
-              setDetail(data);
-              setFav(!!data.favorite);
-              setErr(null);
-              return;
-            }
-          } catch (_) {
-            // fallthrough to generic error
-          }
-        }
-        setErr(err?.response?.data?.message || '상점 정보를 불러오지 못했어요.');
+        // const err = e as { response?: { status?: number; data?: { message?: string } } };
+        // const status = err?.response?.status;
+        // if (status === 500) {
+        //   try {
+        //     const res = await fetch(`https://n0t4u.shop/api/store/${id}/detail`, {
+        //       method: 'GET',
+        //       headers: { Accept: '*/*' },
+        //       mode: 'cors',
+        //       credentials: 'omit',
+        //     });
+        //     if (res.ok) {
+        //       const data = (await res.json()) as StoreDetail;
+        //       if (!alive) return;
+        //       setDetail(data);
+        //       setFav(!!data.favorite);
+        //       setErr(null);
+        //       return;
+        //     }
+        //   } catch (_) {
+        //     // fallthrough to generic error
+        //   }
+        // }
+        // setErr(err?.response?.data?.message || '상점 정보를 불러오지 못했어요.');
       } finally {
         if (alive) setLoading(false);
       }

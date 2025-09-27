@@ -219,10 +219,16 @@ export default function InterestNudge({
 /** 고정 도킹 레이어 */
 const Dock = styled.div`
   position: fixed;
-  left: 12px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--gap, 12px));
+  /* left: 12px; */
+  left: calc(50% - 195px + 22px);
+  top: 700px;
   z-index: 2000;
   pointer-events: none; /* 내부에서 켬 */
+
+  @media (hover: none) and (pointer: coarse) {
+    left: 12px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--gap, 12px));
+  }
 `;
 
 /** 실제 배지 래퍼: 표시/숨김 트랜지션만 담당 */

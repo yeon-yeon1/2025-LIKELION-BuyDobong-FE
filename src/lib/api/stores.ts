@@ -29,7 +29,18 @@ export type StoreDetail = {
 };
 
 // GET /api/store/{storeId}/detail
+// export async function getStoreDetail(storeId: number) {
+//   const { data } = await api.get(`/api/store/${storeId}/detail`);
+//   return data;
+// }
+
 export async function getStoreDetail(storeId: number) {
-  const { data } = await api.get(`/api/store/${storeId}/detail`);
-  return data;
+  const res = await fetch(`https://n0t4u.shop/api/store/${storeId}/detail`, {
+    method: 'GET',
+    headers: { Accept: '*/*' },
+    mode: 'cors',
+    credentials: 'omit',
+  });
+  if (!res.ok) throw new Error('상점 정보를 불러오지 못했어요.');
+  return res.json();
 }

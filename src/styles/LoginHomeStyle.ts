@@ -3,9 +3,11 @@ import palette from '@lib/colorPalette';
 
 export const LoginHome = styled.div`
   /* min-height: 100vh; */
+  height: 800px;
 
   background-color: ${palette.brandBackground};
-  padding: 112px 30px;
+  /* padding: 112px 30px; */
+  padding: 0px 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
